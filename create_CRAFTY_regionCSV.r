@@ -91,32 +91,7 @@ vagri.m<- mask(x=vagri.m, mask=munis.r)   #JM edited munis.r
 writeRaster(vagri.m, "agriculture2000_2018-04-30", "ascii", "overwrite"=T)  #this file has many -9999 but original agriculture2000 has many 0's - is this a problem?
 
 
-slope<-raster("decliv_class.asc")
-vslope<-slope
-
-#why not use reclassify() method for below? https://www.rdocumentation.org/packages/raster/versions/2.6-7/topics/reclassify
-#proof of concept
-#a <- c(0,1)
-#a <- rbind(a,(c(1,2)))
-#r <- raster(ncol=10, nrow=10)
-#values(r) <- rbinom(ncell(r), size = 1, prob = 0.5)
-#plot(r)
-#r <- reclassify(r, a)
-#plot(r)
-
-
-a <- c(1,0)
-a <- rbind(a,(c(2,1)))
-a <- rbind(a,(c(3,2)))
-a <- rbind(a,(c(4,3)))
-a <- rbind(a,(c(5,4)))
-a <- rbind(a,(c(6,4)))
-
-reclassify(vslope, a)
-
-vslope.m<- resample(vslope, munis.r, method='ngb')  #JM edited munis.r
-vslope.m<- mask(x=vslope.m, mask=munis.r)  #JM edited munis.r
-writeRaster(vslope.m, "vslope_2018-04-30", "ascii", "overwrite"=T)
+vslope.m <- raster("Data/vslope_2018-04-30.asc")
 
 
 
