@@ -2,22 +2,13 @@
 #edited from create_CRAFTY_regionCSV2.0_JM_2018-04-27.r 
 
 
-!!needs checking and cleaning!!
+#!!needs checking and cleaning!!
 
 rm(list=ls())
 
 library(raster)
 library(tidyverse)
-#library(plyr)
-#library(dplyr)
-library(rgdal)
-#library(rgeos)
-#library(maptools)
-#library(SDraw)
 
-#require(sp)
-#require(maptools)
-#require(spatstat)
 
 
 ######
@@ -46,29 +37,26 @@ extractXYZ <- function(raster, nodata = FALSE, addCellID = TRUE){
 
 #read raster data
 #script now assumes all these munis files are latlong with identical headers
+
+#read munis.r as latlong
+unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
 munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+#latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
+#crs(munis.r) <- latlong
+
 munis.b <- raster("Data/brazillc_2000_int_reclass_5km_txt_pasture.txt")
-munis.b5 <- raster("Data/brazillc_2005_int_reclass_5km_txt_pasture.txt")
-munis.b10 <- raster("Data/brazillc_2010_int_reclass_5km_txt_pasture.txt")
-munis.b15 <- raster("Data/brazillc_2015_int_reclass_5km_txt_pasture.txt")
+
+
+#classify land cover map here??
 
 
 #create a list of unique municipality id values
 u.mids <- unique(munis.r)  #JM edit munis.r
-length(u.mids)
+#length(u.mids)
 
 
 
-#rasterise land price vector data (for year 2001)
-Landprice<-readOGR("Data/Native_vegetation")
-Lp2001<- Landprice[,-(4:19)]
-Lp2001<- Lp2001[,-(1:2)]
-Lpr<-rasterize(Lp2001, munis.r, field='X2001')  #JM edit munis.r
-
-
-
-
-#use asc instead
+Lpr <- raster('LandPrice2001.asc')
 
 dPorts <- raster('d2Ports2000_2018-04-30.asc')
 

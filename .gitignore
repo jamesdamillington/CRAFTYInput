@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+#Data files
+Data/LandPrice2001.asc
+Data/vslope_2018-04-30.asc
+Data/cru_ts4.zip
+Data/vsoil_2018-05-08.asc
+Data/soilT_2018-05-01.asc
+Data/decliv_class.zip
