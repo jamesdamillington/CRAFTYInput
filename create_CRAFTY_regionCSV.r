@@ -86,6 +86,9 @@ dPorts<- resample(dPorts, munis.r.latlong, method='bilinear')
 
 dPorts.m <- mask(x=dPorts, mask=munis.r.latlong)
 plot(dPorts.m)
+
+
+#flip maps as CRAFTY read values differently
 #munis.r.latlong<-flip(munis.r.latlong, 'y')
 munis.r.latlong<-flip(munis.r.latlong, 'y')
 dPorts.m<-flip(dPorts.m, 'y')
@@ -94,6 +97,8 @@ vagri.f<-flip(vagri.f, 'y')
 vslope.m<-flip(vslope.m, 'y')
 munis.b.m<-flip(munis.b.m, 'y')
 Lpr<-flip(Lpr, 'y')
+
+
 #unique values from muni id raster
 u.mids <- unique(munis.r.latlong)
 length(u.mids)
@@ -107,6 +112,7 @@ set.seed(1)
 br <- cbind(u.mids, sample(c(1), length(u.mids), replace = T))#VAL only 1 behavioral type used currently
 fr <- cbind(u.mids, sample(c(1,2,3,5), length(u.mids), replace = T))#VAL excluded fr4 as it shouldne be declared at initialization
 agentID <- cbind(u.mids, 1:length(u.mids))#VAL attempt at unique agent ids
+
 
 ##choose either sample or read from file
 #continuous: sampled 
