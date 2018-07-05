@@ -14,7 +14,7 @@ library(tidyverse)
 library(ncdf4)
 
 
-writeClimFiles <- F
+
 
 #read munis.r as latlong
 unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
@@ -123,9 +123,9 @@ y_fromYear <- function(year)
 #function to set climate file name (for use in nc2raster) from a year integer and variable (pre, tmn, tmx)
 fn_fromYearVar <- function(year, var)
 {
-  yr = "Data/cru_ts4.01.1991.2000."
-  if(year > 2000 & year <= 2010) { yr = "cru_ts4.01.2001.2010."}
-  if(year > 2010 & year <= 2016) { yr = "cru_ts4.01.2011.2016."}
+  yr = "Data/cruts/cru_ts4.01.1991.2000."
+  if(year > 2000 & year <= 2010) { yr = "Data/cruts/cru_ts4.01.2001.2010."}
+  if(year > 2010 & year <= 2016) { yr = "Data/cruts/cru_ts4.01.2011.2016."}
   
   return(paste0(yr,var,".dat.nc"))
 }
@@ -139,12 +139,6 @@ BRA.ext <- extent(-62.39713, -35.43949, -33.89756, -4.06125)
 #plot(munis.r)
 #drawExtent()
 
-for(y in 1999:2015)
-{
-  calcAgriMaps(munis.r, PAW, y, BRA.ext)
-  print(paste0(y," done"))
-}
-
 
 calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
 {
@@ -154,7 +148,7 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   tmnfn <- fn_fromYearVar(year,"tmn")
   tmxfn <- fn_fromYearVar(year,"tmx")
   
-  print(tr)
+  #print(tr)
   print(prefn)
   print(tmnfn)
   print(tmxfn)
@@ -164,9 +158,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   tmn <- nc2raster(ncname=tmnfn,ncyear=tr,ncvar="tmn")
   tmx <- nc2raster(ncname=tmxfn,ncyear=tr,ncvar="tmx")
   
-  pdf(paste0("Data/pre",year,".pdf"))
-  plot(pre, ext = BRA.e)
-  dev.off()
+  #pdf(paste0("Data/pre",year,".pdf"))
+  #plot(pre, ext = BRA.e)
+  #dev.off()
   
   #project and crop bricks to extent we want for Brazil
   pre.b <- projectRaster(pre, munis.r)
@@ -217,13 +211,7 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
     stack()  #remember to re-stack the list after function
   
   names(PET.b) <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
-  
-  #check
-  pdf(paste0("Data/PET",year,".pdf"))
-  plot(PET.b, ext = BRA.e)
-  dev.off()
-  
-  
+ 
   #see Victoria et al. 2007 DOI: 10.1175/EI198.1 Table 2 for equations
   #initialise water storage variables 
   
@@ -314,6 +302,10 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
     plot(DEF.b, ext = BRA.e)
     dev.off()
     
+    pdf(paste0("Data/PET",year,".pdf"))
+    plot(PET.b, ext = BRA.e)
+    dev.off()
+
     pdf(paste0("Data/ET",year,".pdf"))
     plot(ET.b, ext = BRA.e)
     dev.off()
@@ -350,7 +342,7 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
     #3 – Strong
     #4 – Very strong
 
-  Agri1<-Di
+  #Agri1<-Di
   Agri1 <- nullRaster
   
   Agri1[DEFmonths[]==0&Di[]<20]<-0
@@ -392,49 +384,64 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   plot(Agri1, ext = BRA.e)
   dev.off()
   
-  rm(pre,tmn,tmx,pre.b,tmn.b,tmx.b,PET.b,DEF.b,ET.b,Agri1)
-  
+ 
   
   #Considering the two variables, we join by combining the 6 classes of slope with the 5 classes of climate, resulting in 30 combinations grouped according to the table (below).
   #Each combination is reclassified with a code accordingly to the maximum value of the combination (the value of one of the two variables at least). 
   #The code (suitability classes which equate to Agricultural Capital for CRAFTY) for the combined map was divided by 4 to represent the scale values from 0 to 1.
 
-  vagri.f<-Agri1
-  values(vagri.f)[values(vagri.m)==0&values(vslope.m)==0] = 1      #best
-  values(vagri.f)[values(vagri.m)==0&values(vslope.m)==1] = 0.75
-  values(vagri.f)[values(vagri.m)==0&values(vslope.m)==2] = 0.5
-  values(vagri.f)[values(vagri.m)==0&values(vslope.m)==3] = 0.25
-  values(vagri.f)[values(vagri.m)==0&values(vslope.m)==4] = 0.1
+  vagri.f <- Agri1
+  values(vagri.f)[values(Agri1)==0&values(vslope.m)==0] = 1      #best
+  values(vagri.f)[values(Agri1)==0&values(vslope.m)==1] = 0.75
+  values(vagri.f)[values(Agri1)==0&values(vslope.m)==2] = 0.5
+  values(vagri.f)[values(Agri1)==0&values(vslope.m)==3] = 0.25
+  values(vagri.f)[values(Agri1)==0&values(vslope.m)==4] = 0.1
   
-  values(vagri.f)[values(vagri.m)==1&values(vslope.m)==0] = 0.75
-  values(vagri.f)[values(vagri.m)==1&values(vslope.m)==1] = 0.75
-  values(vagri.f)[values(vagri.m)==1&values(vslope.m)==2] = 0.5
-  values(vagri.f)[values(vagri.m)==1&values(vslope.m)==3] = 0.25
-  values(vagri.f)[values(vagri.m)==1&values(vslope.m)==4] = 0.1
+  values(vagri.f)[values(Agri1)==1&values(vslope.m)==0] = 0.75
+  values(vagri.f)[values(Agri1)==1&values(vslope.m)==1] = 0.75
+  values(vagri.f)[values(Agri1)==1&values(vslope.m)==2] = 0.5
+  values(vagri.f)[values(Agri1)==1&values(vslope.m)==3] = 0.25
+  values(vagri.f)[values(Agri1)==1&values(vslope.m)==4] = 0.1
   
-  values(vagri.f)[values(vagri.m)==2&values(vslope.m)==0] = 0.5
-  values(vagri.f)[values(vagri.m)==2&values(vslope.m)==1] = 0.5
-  values(vagri.f)[values(vagri.m)==2&values(vslope.m)==2] = 0.5
-  values(vagri.f)[values(vagri.m)==2&values(vslope.m)==3] = 0.25
-  values(vagri.f)[values(vagri.m)==2&values(vslope.m)==4] = 0.1
+  values(vagri.f)[values(Agri1)==2&values(vslope.m)==0] = 0.5
+  values(vagri.f)[values(Agri1)==2&values(vslope.m)==1] = 0.5
+  values(vagri.f)[values(Agri1)==2&values(vslope.m)==2] = 0.5
+  values(vagri.f)[values(Agri1)==2&values(vslope.m)==3] = 0.25
+  values(vagri.f)[values(Agri1)==2&values(vslope.m)==4] = 0.1
   
-  values(vagri.f)[values(vagri.m)==3&values(vslope.m)==0] = 0.25
-  values(vagri.f)[values(vagri.m)==3&values(vslope.m)==1] = 0.25
-  values(vagri.f)[values(vagri.m)==3&values(vslope.m)==2] = 0.25
-  values(vagri.f)[values(vagri.m)==3&values(vslope.m)==3] = 0.25
-  values(vagri.f)[values(vagri.m)==3&values(vslope.m)==4] = 0.1
+  values(vagri.f)[values(Agri1)==3&values(vslope.m)==0] = 0.25
+  values(vagri.f)[values(Agri1)==3&values(vslope.m)==1] = 0.25
+  values(vagri.f)[values(Agri1)==3&values(vslope.m)==2] = 0.25
+  values(vagri.f)[values(Agri1)==3&values(vslope.m)==3] = 0.25
+  values(vagri.f)[values(Agri1)==3&values(vslope.m)==4] = 0.1
   
-  values(vagri.f)[values(vagri.m)==4&values(vslope.m)==0] = 0.1
-  values(vagri.f)[values(vagri.m)==4&values(vslope.m)==1] = 0.1
-  values(vagri.f)[values(vagri.m)==4&values(vslope.m)==2] = 0.1
-  values(vagri.f)[values(vagri.m)==4&values(vslope.m)==3] = 0.1
-  values(vagri.f)[values(vagri.m)==4&values(vslope.m)==4] = 0.1
+  values(vagri.f)[values(Agri1)==4&values(vslope.m)==0] = 0.1
+  values(vagri.f)[values(Agri1)==4&values(vslope.m)==1] = 0.1
+  values(vagri.f)[values(Agri1)==4&values(vslope.m)==2] = 0.1
+  values(vagri.f)[values(Agri1)==4&values(vslope.m)==3] = 0.1
+  values(vagri.f)[values(Agri1)==4&values(vslope.m)==4] = 0.1
   values(vagri.f)[values(vagri.f)>1]=0                              #worst
 
   #!check does this need to be resampled/masked before writing?!
   writeRaster(vagri.f, paste0("Data/agricultureCapital",year,".asc"), format = 'ascii', overwrite=T)
   
+  pdf(paste0("Data/agricultureCapital",year,".pdf"))
+  plot(vagri.f, ext = BRA.e)
+  dev.off()
+  
+  rm(pre,tmn,tmx,pre.b,tmn.b,tmx.b,PET.b,DEF.b,ET.b,Agri1,vagri.f)
+  
 }
+
+
+for(y in 1999:2002)
+{
+  writeClimFiles <- T
+  calcAgriMaps(munis.r, PAW, y, BRA.ext)
+  print(paste0(y," done"))
+}
+
+
 
 unlink("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 unlink("Data/soilT_2018-05-01.asc")
