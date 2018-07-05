@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+.ini
 
 #Data files
 Data/LandPrice2001.asc

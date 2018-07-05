@@ -55,66 +55,26 @@ u.mids <- unique(munis.r)  #JM edit munis.r
 #length(u.mids)
 
 
-
+#read required files
+#land prices from LandPriceMap.r
 Lpr <- raster('LandPrice2001.asc')
 
+#??
 dPorts <- raster('d2Ports2000_2018-04-30.asc')
 
+#classified soil map from soilMap.r
 vsoil.m<-raster('vsoil_2018-05-08.asc')   
 
-
-
-#this is the agriculture capital map. made in agriculture.r 
-#will need to update it for new asc maps being made with Paul's new land cover map (i.e. new soil map!)
-vagri.m<-raster('agriculture2000.asc')   
-
-values(vagri.m)[values(vagri.m)==1] = 0.9
-values(vagri.m)[values(vagri.m)==0] = 1
-values(vagri.m)[values(vagri.m)==2] = 0.75
-values(vagri.m)[values(vagri.m)==3] = 0.5
-values(vagri.m)[values(vagri.m)==4] = 0.25
-
-vagri.m<- resample(vagri.m, munis.r, method='ngb')  #JM edited munis.r
-vagri.m<- mask(x=vagri.m, mask=munis.r)   #JM edited munis.r
-writeRaster(vagri.m, "agriculture2000_2018-04-30", "ascii", "overwrite"=T)  #this file has many -9999 but original agriculture2000 has many 0's - is this a problem?
-
-
+#classfied slope values from slopeMap.r 
 vslope.m <- raster("Data/vslope_2018-04-30.asc")
 
+#this is the agriculture capital map. made in agricultureMap.r 
+vagri.m<-raster('Data/agricultureCapital2000.asc')   
 
 
-vagri.f<-vagri.m
-values(vagri.f)[values(vagri.m)==0&values(vslope.m)==0] = 1
-values(vagri.f)[values(vagri.m)==0&values(vslope.m)==1] = 0.75
-values(vagri.f)[values(vagri.m)==0&values(vslope.m)==2] = 0.5
-values(vagri.f)[values(vagri.m)==0&values(vslope.m)==3] = 0.25
-values(vagri.f)[values(vagri.m)==0&values(vslope.m)==4] = 0.1
-
-values(vagri.f)[values(vagri.m)==1&values(vslope.m)==0] = 0.75
-values(vagri.f)[values(vagri.m)==1&values(vslope.m)==1] = 0.75
-values(vagri.f)[values(vagri.m)==1&values(vslope.m)==2] = 0.5
-values(vagri.f)[values(vagri.m)==1&values(vslope.m)==3] = 0.25
-values(vagri.f)[values(vagri.m)==1&values(vslope.m)==4] = 0.1
-
-values(vagri.f)[values(vagri.m)==2&values(vslope.m)==0] = 0.5
-values(vagri.f)[values(vagri.m)==2&values(vslope.m)==1] = 0.5
-values(vagri.f)[values(vagri.m)==2&values(vslope.m)==2] = 0.5
-values(vagri.f)[values(vagri.m)==2&values(vslope.m)==3] = 0.25
-values(vagri.f)[values(vagri.m)==2&values(vslope.m)==4] = 0.1
-
-values(vagri.f)[values(vagri.m)==3&values(vslope.m)==0] = 0.25
-values(vagri.f)[values(vagri.m)==3&values(vslope.m)==1] = 0.25
-values(vagri.f)[values(vagri.m)==3&values(vslope.m)==2] = 0.25
-values(vagri.f)[values(vagri.m)==3&values(vslope.m)==3] = 0.25
-values(vagri.f)[values(vagri.m)==3&values(vslope.m)==4] = 0.1
-
-values(vagri.f)[values(vagri.m)==4&values(vslope.m)==0] = 0.1
-values(vagri.f)[values(vagri.m)==4&values(vslope.m)==1] = 0.1
-values(vagri.f)[values(vagri.m)==4&values(vslope.m)==2] = 0.1
-values(vagri.f)[values(vagri.m)==4&values(vslope.m)==3] = 0.1
-values(vagri.f)[values(vagri.m)==4&values(vslope.m)==4] = 0.1
-values(vagri.f)[values(vagri.f)>1]=0
 munis.b.m<-mask(x=munis.b, mask=munis.r)   #JM edited
+
+
 
 #plot(munis.r.latlong)
 #plot(dPorts)
