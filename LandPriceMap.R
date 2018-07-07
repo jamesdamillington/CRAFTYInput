@@ -19,7 +19,7 @@ Lpr<-rasterize(Lp2001, munis.r, field='X2001')
 
 #re-scale to 0-1 for Capital
 Lpr.scaled <- Lpr
-values(Lpr.scaled)= (1500-(values(Lpr)))/1500
+values(Lpr.scaled)= round((1500-(values(Lpr)))/1500, digits=3)
 
 plot(Lpr.scaled)
 
