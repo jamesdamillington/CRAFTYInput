@@ -95,10 +95,18 @@ agri.xy <- as.tibble(extractXYZ(agri.r))
 infra.xy <- as.tibble(extractXYZ(infra.r))
 
 
+#joins (because some maps are not perfectly aligned with munis.r
+join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
+  select(-V1.y) %>%
+  rename(muniID = vals.x, Infrastructure = vals.y) %>%
+  left_join(., Lpr.xy, by = c("row", "col")) %>%
+  select(-V1) %>%
+  rename("Land Price" = vals) #%>%
 
 
-region.xy <- munis.xy %>%
-  rename(" " = V1, Y = row, X = col, muniID = vals) %>%
+
+region.xy <- join.xy %>%
+  rename(" " = V1, Y = row.x, X = col.x) %>%
   mutate(agentID = row_number()) %>%  #add dummy agent_ID
   mutate(BT = "Cognitor") %>%
   
@@ -110,12 +118,11 @@ region.xy <- munis.xy %>%
   
   mutate(Human = 1) %>%
   mutate(Development = 1) %>%
-  mutate(Infrastructure = infra.xy$vals) %>%
   mutate(Economic = 1) %>%
   
 #Acessibility	
 #Climate	     #not needed??
-#Land Price	
+
   
   mutate(`Land Price` = Lpr.xy$vals)
 #Growing Season	
@@ -156,10 +163,10 @@ muniscsv$FR[muniscsv$FR==6]<-"FR6"
 #names(muniscsv)[1]="ID"
 #names(muniscsv)[2]="Y"
 #names(muniscsv)[3]="X"
-names(muniscsv)[20]="Land Price"
+#names(muniscsv)[20]="Land Price"
 muniscsv$Acessibility<-(sample(90:100, size=nrow(muniscsv), replace = T))/100
 muniscsv$Acessibility[muniscsv$FR=="FR5"]<-(sample(1:20, size=nrow(muniscsv), replace = T))/100
-muniscsv$Infrastructure<-muniscsv$Ports
+#muniscsv$Infrastructure<-muniscsv$Ports
 #muniscsv$Soil[muniscsv$Slope==0]<-0
 #muniscsv$Slope[muniscsv$Soil==0]<-0
 #muniscsv$Climate[muniscsv$Slope==0]<-0
