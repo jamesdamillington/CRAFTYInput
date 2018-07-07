@@ -82,8 +82,10 @@ summary(r1997)
 
 #so rescale differently
 r1997.m <- resample(r1997, munis.r, method='bilinear')
-r1997.m <- mask(x=r1997.m, mask=munis.r)
+r1997.m <- mask(x=r1997.m, mask=munis.r, updatevalue=40000,updateNA=F) #supply mask value othewise some cells in mask are NA (use join in create_regionCSV script) 
 values(r1997.m)=1+(values(r1997.m)/-100000)
+plot(r1997.m)
+
 
 hist(values(r1997.m))
 
@@ -113,7 +115,8 @@ hist(values(r2007.m))
 plot(r2007.m, main="2007rescaled", zlim= c(0.4,1))
 
 #mask to study area
-r2007.m <- mask(x=r2007.m, mask=munis.r)
+r2007.m <- mask(x=r2007.m, mask=munis.r, updatevalue=40000,updateNA=F) #supply mask value othewise some cells in mask are NA (use join in create_regionCSV script)  )
+values(r2007.m)=1+(values(r2007.m)/-100000)
 plot(r2007.m, main="2007rescaled", zlim= c(0.4,1))
 
 
