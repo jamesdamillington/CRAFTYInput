@@ -17,8 +17,15 @@ Lp2001<- Landprice[,-(4:19)]
 Lp2001<- Lp2001[,-(1:2)]
 Lpr<-rasterize(Lp2001, munis.r, field='X2001')  
 
-writeRaster(Lpr, "Data/LandPrice2001.asc", format = 'ascii', overwrite=T)
+#re-scale to 0-1 for Capital
+Lpr.scaled <- Lpr
+values(Lpr.scaled)= (1500-(values(Lpr)))/1500
 
+plot(Lpr.scaled)
+
+
+writeRaster(Lpr, "Data/LandPrice2001.asc", format = 'ascii', overwrite=T)
+writeRaster(Lpr.scaled, "Data/LandPrice2001_Capital.asc", format = 'ascii', overwrite=T)
 
 unlink("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 unlink("Data/LandPrice", recursive = T)
