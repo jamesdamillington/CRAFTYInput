@@ -57,7 +57,7 @@ u.mids <- unique(munis.r)  #JM edit munis.r
 
 #read required files
 #land prices from LandPriceMap.r
-Lpr.r <- raster('Data/LandPrice2001.asc')
+Lpr.r <- raster('Data/LandPrice2001_Capital.asc')
 
 #classified soil map from soilMap.r
 soil.r <- raster('Data/vsoil_2018-05-08.asc')   
@@ -101,8 +101,8 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   rename(muniID = vals.x, Infrastructure = vals.y) %>%
   left_join(., Lpr.xy, by = c("row", "col")) %>%
   select(-V1) %>%
-  rename("Land Price" = vals) #%>%
-
+  rename("Land Price" = vals) %>%
+  filter_all(all_vars(!is.na(.)))      #filter any rows missing data NA values
 
 
 region.xy <- join.xy %>%
@@ -123,8 +123,7 @@ region.xy <- join.xy %>%
 #Acessibility	
 #Climate	     #not needed??
 
-  
-  mutate(`Land Price` = Lpr.xy$vals)
+
 #Growing Season	
 #Other Agriculture	
 #Other	
