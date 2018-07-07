@@ -17,6 +17,7 @@
 #2018-07-06
 #trying to work out where the numbers in regionCSV come from
 
+rm(list=ls())
 library(raster)
 
 
@@ -116,5 +117,10 @@ r2007.m <- mask(x=r2007.m, mask=munis.r)
 plot(r2007.m, main="2007rescaled", zlim= c(0.4,1))
 
 
+values(r1997.m)=round(values(r1997.m), digits=3)
+values(r2007.m)=round(values(r2007.m), digits=3)
+
+writeRaster(r1997.m, "Data/infrastructureCap1997", "ascii", "overwrite"=T)
+writeRaster(r2007.m, "Data/infrastructureCap2007", "ascii", "overwrite"=T)
 
 
