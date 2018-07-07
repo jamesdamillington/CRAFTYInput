@@ -44,7 +44,7 @@ munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 #latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 #crs(munis.r) <- latlong
 
-munis.b <- raster("Data/brazillc_2000_int_reclass_5km_txt_pasture.txt")
+landCover.r <- raster("Data/brazillc_2000_int_reclass_5km_txt_pasture.txt")
 
 
 #classify land cover map here??
@@ -57,145 +57,89 @@ u.mids <- unique(munis.r)  #JM edit munis.r
 
 #read required files
 #land prices from LandPriceMap.r
-Lpr <- raster('LandPrice2001.asc')
-
-#??
-dPorts <- raster('d2Ports2000_2018-04-30.asc')
+Lpr.r <- raster('Data/LandPrice2001.asc')
 
 #classified soil map from soilMap.r
-vsoil.m<-raster('vsoil_2018-05-08.asc')   
+soil.r <- raster('Data/vsoil_2018-05-08.asc')   
 
 #classfied slope values from slopeMap.r 
-vslope.m <- raster("Data/vslope_2018-04-30.asc")
+slope.r <- raster("Data/vslope_2018-04-30.asc")
 
 #this is the agriculture capital map. made in agricultureMap.r 
-vagri.m<-raster('Data/agricultureCapital2000.asc')   
+agri.r <- raster('Data/agricultureCapital/agricultureCapital2000.asc')   
 
+#infrastrucutre Map made in infrastructureMap.r
+infra.r <- raster('Data/infrastructureCapital/infrastructureCap1997.asc')
 
-munis.b.m<-mask(x=munis.b, mask=munis.r)   #JM edited
-
-
-
-#plot(munis.r.latlong)
-#plot(dPorts)
-values(dPorts)=values(dPorts)/1000
-values(dPorts)=values(dPorts)*(1/-2530)
-values(dPorts)=values(dPorts)+1
-values(dPorts)=round(values(dPorts), digits=3)
-dPorts<- resample(dPorts, munis.r.latlong, method='bilinear')
-
-dPorts.m <- mask(x=dPorts, mask=munis.r.latlong)
-plot(dPorts.m)
-
-
-#flip maps as CRAFTY read values differently
-#munis.r.latlong<-flip(munis.r.latlong, 'y')
-munis.r.latlong<-flip(munis.r.latlong, 'y')
-dPorts.m<-flip(dPorts.m, 'y')
-vsoil.m<-flip(vsoil.m, 'y')
-vagri.f<-flip(vagri.f, 'y')
-vslope.m<-flip(vslope.m, 'y')
-munis.b.m<-flip(munis.b.m, 'y')
-Lpr<-flip(Lpr, 'y')
-
-
-#unique values from muni id raster
-u.mids <- unique(munis.r.latlong)
-length(u.mids)
-
+#flip maps as CRAFTY read values from the bottom of the map
+munis.r<-flip(munis.r, 'y')
+infra.r<-flip(infra.r, 'y')
+soil.r<-flip(soil.r, 'y')
+agri.r<-flip(agri.r, 'y')
+slope.r<-flip(slope.r, 'y')
+landCover.r <-flip(landCover.r, 'y')
+Lpr.r<-flip(Lpr.r, 'y')
 
 
 #create reclassify matrix: muni ids and a random value (uniform for entire muni)
 set.seed(1)
 
-#categorical
-br <- cbind(u.mids, sample(c(1), length(u.mids), replace = T))#VAL only 1 behavioral type used currently
-fr <- cbind(u.mids, sample(c(1,2,3,5), length(u.mids), replace = T))#VAL excluded fr4 as it shouldne be declared at initialization
-agentID <- cbind(u.mids, 1:length(u.mids))#VAL attempt at unique agent ids
-
-
-##choose either sample or read from file
-#continuous: sampled 
-# agri <- cbind(u.mids, round(runif(length(u.mids), 0, 1),3))
-# nat <- cbind(u.mids, round(runif(length(u.mids), 0, 1),3))
-# hum <- cbind(u.mids, round(runif(length(u.mids), 0, 1),3))
-# dev <- cbind(u.mids, round(runif(length(u.mids), 0, 1),3))
-# infra <- cbind(u.mids, round(runif(length(u.mids), 0, 1),3))
-# econ <- cbind(u.mids, round(runif(length(u.mids), 0, 1),3))
-# access <- cbind(u.mids, round(runif(length(u.mids), 0, 1),3))
-
-#continuous: from file
-#setwd(paste(belmontDataPath, "Brazil/AdminBoundaries/CRAFTYtesting", sep=""))
-dat <- read.csv("createRegionCSV_dummy.csv")
-
-#join data to u.mids in the raster (some may be missing)
-df.u.mids <- as.data.frame(u.mids)
-dat <- inner_join(dat, df.u.mids, by = c('CD_GCMUN' = 'u.mids'))
-
-agri <- dat[,c('CD_GCMUN','Agriculture')]#VAL renamed to match crafty inputs
-nat <- dat[,c('CD_GCMUN','Nature')]
-hum <- dat[,c('CD_GCMUN','Human')]
-dev <- dat[,c('CD_GCMUN','Development')]
-infra <- dat[,c('CD_GCMUN','Infrastructure')]
-econ <- dat[,c('CD_GCMUN','Economic')]
-access <- dat[,c('CD_GCMUN','Accessibility')]
-
-
-#use reclassify matrix 
-br.r <- reclassify(munis.r.latlong, br)
-fr.r <- reclassify(munis.r.latlong, fr)
-agentID.r <- reclassify(munis.r.latlong, agentID)
-agri.r <- reclassify(munis.r.latlong, agri)
-nat.r <- reclassify(munis.r.latlong, nat)
-hum.r <- reclassify(munis.r.latlong, hum)
-dev.r <- reclassify(munis.r.latlong, dev)
-infra.r <- reclassify(munis.r.latlong, infra)
-econ.r <- reclassify(munis.r.latlong, econ)
-access.r <- reclassify(munis.r.latlong, access)
-
-munis.s <- stack(list(munis.r.latlong,
-                      br.r,
-                      fr.r,
-                      agentID.r, 
-                      agri.r, 
-                      nat.r, 
-                      hum.r, 
-                      dev.r, 
-                      infra.r, 
-                      econ.r, 
-                      access.r,
-                      dPorts.m,
-                      vsoil.m,
-                      vslope.m,
-                      vagri.f,
-                      munis.b.m,
-                      Lpr))
-
-names(munis.s) <- list("muniID",
-                       "BT",
-                       "FR",
-                       "agentid", 
-                       "Agriculture",
-                       "Nature",
-                       "Human",
-                       "Development",
-                       "Infrastructure",
-                       "Economic",
-                       "Acessibility",
-                       "Ports",
-                       "Soil",
-                       "Slope",
-                       "Climate",
-                       "Landuse",
-                       "Land Price")
-
-munis.out <- extractXYZ(munis.s)
-head(munis.out)
-
-#need to check row,col consistency with CRAFTY X,Y
-write.csv(munis.out,"region.csv", row.names = F)
-muniscsv <- read.csv("region.csv")
 statecsv<-read.csv("Municipality_area_and_IBGE_code_number.csv")
+
+munis.xy <- as.tibble(extractXYZ(munis.r))
+LC.xy <- as.tibble(extractXYZ(landCover.r))
+Lpr.xy <- as.tibble(extractXYZ(Lpr.r))
+soil.xy <- as.tibble(extractXYZ(soil.r))
+slope.xy <- as.tibble(extractXYZ(slope.r))
+agri.xy <- as.tibble(extractXYZ(agri.r))
+infra.xy <- as.tibble(extractXYZ(infra.r))
+
+
+
+
+region.xy <- munis.xy %>%
+  rename(" " = V1, Y = row, X = col, muniID = vals) %>%
+  mutate(agentID = row_number()) %>%  #add dummy agent_ID
+  mutate(BT = "Cognitor") %>%
+  
+  ##FR here
+  
+  mutate(Agriculture = agri.xy$vals)  %>%
+
+##Nature here
+  
+  mutate(Human = 1) %>%
+  mutate(Development = 1) %>%
+  mutate(Infrastructure = infra.xy$vals) %>%
+  mutate(Economic = 1) %>%
+  
+#Acessibility	
+#Climate	     #not needed??
+#Land Price	
+  
+  mutate(`Land Price` = Lpr.xy$vals)
+#Growing Season	
+#Other Agriculture	
+#Other	
+#Land Protection
+  
+
+
+
+
+munis.xy <- munis.xy %>%
+  mutate(LC = if_else(LCa == "LC1area", 1, 
+      if_else(LCa == "LC2area", 2,
+      if_else(LCa == "LC3area", 3,
+      if_else(LCa == "LC4area", 4,
+      if_else(LCa == "LC5area", 5, 0)
+      )))))
+
+
+
+
+
+
 muniscsv$FR[muniscsv$Landuse==1]<-5
 muniscsv$FR[muniscsv$Landuse==2]<-6
 muniscsv$FR[muniscsv$Landuse==3]<-sample(1:3, nrow(muniscsv), replace=T)
@@ -206,11 +150,12 @@ muniscsv$FR[muniscsv$FR==2]<-"FR2"
 muniscsv$FR[muniscsv$FR==1]<-"FR1"
 muniscsv$FR[muniscsv$FR==7]<-"FR7"
 muniscsv$FR[muniscsv$FR==6]<-"FR6"
-muniscsv$BT<-"Cognitor"
-muniscsv$agentid<-1:nrow(muniscsv)
-names(muniscsv)[1]="ID"
-names(muniscsv)[2]="Y"
-names(muniscsv)[3]="X"
+
+#muniscsv$BT<-"Cognitor"
+#muniscsv$agentid<-1:nrow(muniscsv)
+#names(muniscsv)[1]="ID"
+#names(muniscsv)[2]="Y"
+#names(muniscsv)[3]="X"
 names(muniscsv)[20]="Land Price"
 muniscsv$Acessibility<-(sample(90:100, size=nrow(muniscsv), replace = T))/100
 muniscsv$Acessibility[muniscsv$FR=="FR5"]<-(sample(1:20, size=nrow(muniscsv), replace = T))/100
@@ -219,10 +164,10 @@ muniscsv$Infrastructure<-muniscsv$Ports
 #muniscsv$Slope[muniscsv$Soil==0]<-0
 #muniscsv$Climate[muniscsv$Slope==0]<-0
 #muniscsv$Climate[muniscsv$Soil==0]<-0
-muniscsv$Agriculture<-muniscsv$Climate
-muniscsv$Human<-1
-muniscsv$Development<-1
-muniscsv$Economic<-1
+#muniscsv$Agriculture<-muniscsv$Climate
+#muniscsv$Human<-1
+#muniscsv$Development<-1
+#muniscsv$Economic<-1
 muniscsv$Nature[muniscsv$FR=="FR5"]<-0.9
 muniscsv$Nature[muniscsv$FR=="FR4"]<-0.9
 muniscsv$Nature[muniscsv$FR=="FR3"]<-0.3
@@ -268,7 +213,3 @@ write.csv(muniscsv,"region.csv", row.names = F)
 
 
 
-
-
-
-#code for rasterising ports and soils vector files 
