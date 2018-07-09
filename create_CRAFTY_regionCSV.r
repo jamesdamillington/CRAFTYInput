@@ -106,16 +106,16 @@ infra.xy <- as.tibble(extractXYZ(infra.r))
 
 
 
-
-
-
-#joins (because Infrastructure and Land Price maps are not perfectly aligned with munis.r)
+#joins (because Infrastructure, Agriculture, Land Price maps are not perfectly aligned with munis.r)
 join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   select(-V1.y) %>%
   rename(muniID = vals.x, Infrastructure = vals.y) %>%
   left_join(., Lpr.xy, by = c("row", "col")) %>%
   select(-V1) %>%
   rename("Land Price" = vals) %>%
+  left_join(., agri.xy, by = c("row", "col")) %>%
+  select(-V1) %>%
+  rename("Agriculture" = vals) %>%  
   filter_all(all_vars(!is.na(.)))      #filter any rows missing data NA values
 
 
@@ -163,10 +163,9 @@ join.xy <- join.xy %>%
 
 #add columns that are either uniform or simple row number
 region.xy <- join.xy %>%
-  rename(" " = V1, Y = row.x, X = col.x) %>%
+  rename(" " = V1.x, Y = row, X = col) %>%
   mutate(agentID = row_number()) %>%  #add dummy agent_ID
   mutate(BT = "Cognitor") %>%
-  mutate(Agriculture = agri.xy$vals)  %>%
   mutate(Human = 1) %>%
   mutate(Development = 1) %>%
   mutate(Economic = 1) 
