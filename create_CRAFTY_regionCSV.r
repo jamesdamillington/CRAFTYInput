@@ -168,7 +168,11 @@ region.xy <- join.xy %>%
   mutate(BT = "Cognitor") %>%
   mutate(Human = 1) %>%
   mutate(Development = 1) %>%
-  mutate(Economic = 1) 
+  mutate(Economic = 1) %>%
+  mutate(`Land Protection` = 1) %>%
+  mutate(Other = if_else(FR == "FR7", 1,0)) %>%
+  mutate(`Other Agriculture` = if_else(FR == "FR6", 1,0))
+      
   
 #Acessibility	
 #Climate	     #not needed??
@@ -216,11 +220,11 @@ muniscsv$Acessibility[muniscsv$FR=="FR5"]<-(sample(1:20, size=nrow(muniscsv), re
 #muniscsv$Nature[muniscsv$FR=="FR6"]<-0.6
 #muniscsv$Nature[muniscsv$FR=="FR7"]<-0
 #muniscsv$"Growing Season"<-0
-muniscsv$Pasture<-0
-muniscsv$Pasture[muniscsv$FR=="FR6"]<-1
-muniscsv$Other<-0
-muniscsv$Other[muniscsv$FR=="FR7"]<-1
-muniscsv$"Land Protection"<-1
+#muniscsv$Pasture<-0
+#muniscsv$Pasture[muniscsv$FR=="FR6"]<-1
+#muniscsv$Other<-0
+#muniscsv$Other[muniscsv$FR=="FR7"]<-1
+#muniscsv$"Land Protection"<-1
 #muniscsv$`Land Price`<-signif(muniscsv$`Land Price`, digits=3)
 #muniscsv$`Land Price`<-1500-muniscsv$`Land Price`
 #muniscsv$`Land Price`<-muniscsv$`Land Price`/1500
