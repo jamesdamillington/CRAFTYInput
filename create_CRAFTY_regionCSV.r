@@ -154,25 +154,42 @@ join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
 #FR7 = Other (LC4)
 #FR8 = Pasture (LC5) 
 
+#add nature
 join.xy <- join.xy %>%
   mutate(Nature = if_else(FR == "FR5", 0.9,       #virgin nature (FR4 not in initial state)      
     if_else(FR == "FR8", 0.6,                     #pasture
     if_else(FR == "FR7", 0, 0.3)                  #other = 0.0, non-pasture agri uses = 0.3
     )))
 
+#add accessibility (NB note typo) (but this is calculated dynamically within CRAFY code)
+join.xy <- join.xy %>%
+  mutate(Acessibility = if_else(FR == "FR5",
+    sample(1:20,n(),replace=T)/100,
+    sample(90:100,n(),replace=T)/100
+  ))
+
 
 #add columns that are either uniform or simple row number
 region.xy <- join.xy %>%
-  rename(" " = V1.x, Y = row, X = col) %>%
-  mutate(agentID = row_number()) %>%  #add dummy agent_ID
+  rename(Y = row, X = col) %>%
+  mutate(agentid = row_number()) %>%  #add dummy agent_ID
   mutate(BT = "Cognitor") %>%
-  mutate(Human = 1) %>%
-  mutate(Development = 1) %>%
-  mutate(Economic = 1) %>%
-  mutate(`Land Protection` = 1) %>%
-  mutate(Other = if_else(FR == "FR7", 1,0)) %>%
-  mutate(`Other Agriculture` = if_else(FR == "FR6", 1,0))
-      
+  mutate(Human = 1.0) %>%
+  mutate(Development = 1.0) %>%
+  mutate(Economic = 1.0) %>%
+  mutate(`Land Protection` = 1.0) %>%
+  mutate(Other = if_else(FR == "FR7", 1.0,0)) %>%
+  mutate(`Other Agriculture` = if_else(FR == "FR6", 1.0,0)) %>%
+  mutate(Climate = Agriculture)
+
+region <- region.xy %>% 
+  filter_all(., all_vars(!is.na(.))) %>%
+  select(V1.x,Y,X,muniID,BT,FR,agentid,Agriculture,Nature,Human,Development,Infrastructure,Economic,Acessibility,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Land Protection`) %>%
+  rename(" " = V1.x)
+
+write_csv(region, "Data/region.csv")
+
+
   
 #Acessibility	
 #Climate	     #not needed??
@@ -201,8 +218,8 @@ region.xy <- join.xy %>%
 #names(muniscsv)[2]="Y"
 #names(muniscsv)[3]="X"
 #names(muniscsv)[20]="Land Price"
-muniscsv$Acessibility<-(sample(90:100, size=nrow(muniscsv), replace = T))/100
-muniscsv$Acessibility[muniscsv$FR=="FR5"]<-(sample(1:20, size=nrow(muniscsv), replace = T))/100
+#muniscsv$Acessibility<-(sample(90:100, size=nrow(muniscsv), replace = T))/100
+#muniscsv$Acessibility[muniscsv$FR=="FR5"]<-(sample(1:20, size=nrow(muniscsv), replace = T))/100
 #muniscsv$Infrastructure<-muniscsv$Ports
 #muniscsv$Soil[muniscsv$Slope==0]<-0
 #muniscsv$Slope[muniscsv$Soil==0]<-0
@@ -228,10 +245,10 @@ muniscsv$Acessibility[muniscsv$FR=="FR5"]<-(sample(1:20, size=nrow(muniscsv), re
 #muniscsv$`Land Price`<-signif(muniscsv$`Land Price`, digits=3)
 #muniscsv$`Land Price`<-1500-muniscsv$`Land Price`
 #muniscsv$`Land Price`<-muniscsv$`Land Price`/1500
-muniscsv$Ports<-NULL
-muniscsv$Soil<-NULL
-muniscsv$Slope<-NULL
-muniscsv$Landuse<-NULL
+#muniscsv$Ports<-NULL
+#muniscsv$Soil<-NULL
+#muniscsv$Slope<-NULL
+#muniscsv$Landuse<-NULL
 #names(statecsv)[5]="muniID"
 #bzro<-inner_join(statecsv, muniscsv, by = "muniID")
 #statedata<-bzro[, c(2,5)]
@@ -246,14 +263,14 @@ muniscsv$Landuse<-NULL
 #statedata<-statedata[!duplicated(statedata$muniID),]
 #muniscsv<-inner_join(muniscsv, statedata, by = "muniID")
 
-names(muniscsv)[1]=""
+#names(muniscsv)[1]=""
 #muniscsv$`Growing Season`[muniscsv$DoubleCropping==1]<-1
 #muniscsv$DoubleCropping<-NULL
 #muniscsv$FR[(muniscsv$FR=="FR1"|muniscsv$FR=="FR2")&(muniscsv$`Growing Season`==1)]<-"FR3"
 #muniscsv$FR[(muniscsv$FR=="FR3")&(muniscsv$`Growing Season`==0)]<-sample(1:2, nrow(muniscsv), replace=T)
 #muniscsv$FR[muniscsv$FR==2]<-"FR2"
 #muniscsv$FR[muniscsv$FR==1]<-"FR1"
-write.csv(muniscsv,"region.csv", row.names = F)
+#write.csv(muniscsv,"region.csv", row.names = F)
 
 
 
