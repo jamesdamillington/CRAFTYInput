@@ -132,7 +132,6 @@ join.xy <- left_join(join.xy, DC, by = c("row","col")) %>%
   select(-CD_GCUF)
 
 
-
 #add LC to the table then use to create FR column (see below for logic)
 join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
   select(-V1) %>%
@@ -155,6 +154,11 @@ join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
 #FR7 = Other (LC4)
 #FR8 = Pasture (LC5) 
 
+join.xy <- join.xy %>%
+  mutate(Nature = if_else(FR == "FR5", 0.9,       #virgin nature (FR4 not in initial state)      
+    if_else(FR == "FR8", 0.6,                     #pasture
+    if_else(FR == "FR7", 0, 0.3)                  #other = 0.0, non-pasture agri uses = 0.3
+    )))
 
 
 #add columns that are either uniform or simple row number
@@ -205,13 +209,13 @@ muniscsv$Acessibility[muniscsv$FR=="FR5"]<-(sample(1:20, size=nrow(muniscsv), re
 #muniscsv$Human<-1
 #muniscsv$Development<-1
 #muniscsv$Economic<-1
-muniscsv$Nature[muniscsv$FR=="FR5"]<-0.9
-muniscsv$Nature[muniscsv$FR=="FR4"]<-0.9
-muniscsv$Nature[muniscsv$FR=="FR3"]<-0.3
-muniscsv$Nature[muniscsv$FR=="FR2"]<-0.3
-muniscsv$Nature[muniscsv$FR=="FR1"]<-0.3
-muniscsv$Nature[muniscsv$FR=="FR6"]<-0.6
-muniscsv$Nature[muniscsv$FR=="FR7"]<-0
+#muniscsv$Nature[muniscsv$FR=="FR5"]<-0.9
+#muniscsv$Nature[muniscsv$FR=="FR4"]<-0.9
+#muniscsv$Nature[muniscsv$FR=="FR3"]<-0.3
+#muniscsv$Nature[muniscsv$FR=="FR2"]<-0.3
+#muniscsv$Nature[muniscsv$FR=="FR1"]<-0.3
+#muniscsv$Nature[muniscsv$FR=="FR6"]<-0.6
+#muniscsv$Nature[muniscsv$FR=="FR7"]<-0
 #muniscsv$"Growing Season"<-0
 muniscsv$Pasture<-0
 muniscsv$Pasture[muniscsv$FR=="FR6"]<-1
