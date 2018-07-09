@@ -52,9 +52,9 @@ munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 
 #land cover map provided should have 5 landcover classes:
 #1 = Nature
-#2 = 
-#3 =
-#4 =
+#2 = Other Agri
+#3 = Agri
+#4 = Other
 #5 = Pasture
 
 landCover.r <- raster("Data/LandCover2000_PastureB.asc")
@@ -128,18 +128,32 @@ DC <- inner_join(join.xy, state, by = c("muniID" = "CD_GCMUN")) %>%
   select(row, col, CD_GCUF) %>%
   mutate("Double Cropping" = if_else(CD_GCUF %in% DCstates,  1, 0))  #1 if stateID is in list otherwise 0
       
-join.xy <- left_join(join.xy, DC.s, by = c("row","col")) %>%
+join.xy <- left_join(join.xy, DC, by = c("row","col")) %>%
   select(-CD_GCUF)
-  
 
-#LC here... this code will be useful
-munis.xy <- munis.xy %>%
-  mutate(LC = if_else(LCa == "LC1area", 1, 
-      if_else(LCa == "LC2area", 2,
-      if_else(LCa == "LC3area", 3,
-      if_else(LCa == "LC4area", 4,
-      if_else(LCa == "LC5area", 5, 0)
-      )))))
+
+
+#add LC to the table then use to create FR column (see below for logic)
+join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
+  select(-V1) %>%
+  rename(LC = vals) %>%
+  mutate(FR = 
+    if_else(LC == 1, "FR5",                 
+    if_else(LC == 2, "FR6",                 
+    if_else(LC == 3,
+      if_else(`Double Cropping` == 1, "FR3",         #if double cropping possible, always assign
+        if_else(rbinom(n(),1,0.5) == 1,"FR1","FR2")),   #if double cropping not possible, randomly assign soy or maize (or should weight by muncipality data on production??) see https://stackoverflow.com/a/31878476 for n()
+    if_else(LC == 4, "FR7", "FR8")
+    ))))
+    
+#FR1 = Soy (LC3 where DC == 0)
+#FR2 = Maize (LC3 where DC == 0)
+#FR3 = Double Crop (soy/maize) (LC3 where DC == 1)
+#FR4 = Nature (LC1) [does not exist at model initialisation]
+#FR5 = Stubborn Nature (LC1)
+#FR6 = Other Agri (LC2)
+#FR7 = Other (LC4)
+#FR8 = Pasture (LC5) 
 
 
 
@@ -163,16 +177,16 @@ region.xy <- join.xy %>%
 #Land Protection
   
 #old code below. comment out as implemented above
-muniscsv$FR[muniscsv$Landuse==1]<-5
-muniscsv$FR[muniscsv$Landuse==2]<-6
-muniscsv$FR[muniscsv$Landuse==3]<-sample(1:3, nrow(muniscsv), replace=T)
-muniscsv$FR[muniscsv$Landuse==4]<-7
-muniscsv$FR[muniscsv$FR==5]<-"FR5"
-muniscsv$FR[muniscsv$FR==3]<-"FR3"
-muniscsv$FR[muniscsv$FR==2]<-"FR2"
-muniscsv$FR[muniscsv$FR==1]<-"FR1"
-muniscsv$FR[muniscsv$FR==7]<-"FR7"
-muniscsv$FR[muniscsv$FR==6]<-"FR6"
+#muniscsv$FR[muniscsv$Landuse==1]<-5
+#muniscsv$FR[muniscsv$Landuse==2]<-6
+#muniscsv$FR[muniscsv$Landuse==3]<-sample(1:3, nrow(muniscsv), replace=T)
+#muniscsv$FR[muniscsv$Landuse==4]<-7
+#muniscsv$FR[muniscsv$FR==5]<-"FR5"
+#muniscsv$FR[muniscsv$FR==3]<-"FR3"
+#muniscsv$FR[muniscsv$FR==2]<-"FR2"
+#muniscsv$FR[muniscsv$FR==1]<-"FR1"
+#muniscsv$FR[muniscsv$FR==7]<-"FR7"
+#muniscsv$FR[muniscsv$FR==6]<-"FR6"
 
 #muniscsv$BT<-"Cognitor"
 #muniscsv$agentid<-1:nrow(muniscsv)
