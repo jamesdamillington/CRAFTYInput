@@ -2,6 +2,11 @@
 #edited from create_CRAFTY_regionCSV2.0_JM_2018-04-27.r 
 
 
+
+#list here what Captial maps shoudle be provided (and in what scripts they are created)
+#also list what Captials are derived within this script
+
+
 #!!needs checking and cleaning!!
 
 rm(list=ls())
@@ -44,10 +49,15 @@ munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 #latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 #crs(munis.r) <- latlong
 
-landCover.r <- raster("Data/brazillc_2000_int_reclass_5km_txt_pasture.txt")
 
+#land cover map provided should have 5 landcover classes:
+#1 = Nature
+#2 = 
+#3 =
+#4 =
+#5 = Pasture
 
-#classify land cover map here??
+landCover.r <- raster("Data/LandCover2000_PastureB.asc")
 
 
 #create a list of unique municipality id values
@@ -116,7 +126,7 @@ state <-read_csv("Data/Municipality_area_and_IBGE_code_number.csv")
 DCstates <- c(50,51,41,52,31,35)  #specify which states double cropping is possible in
 DC <- inner_join(join.xy, state, by = c("muniID" = "CD_GCMUN")) %>%
   select(row, col, CD_GCUF) %>%
-  mutate("Double Cropping" = if_else(CD_GCUF %in% DCstates,  1, 0)) 
+  mutate("Double Cropping" = if_else(CD_GCUF %in% DCstates,  1, 0))  #1 if stateID is in list otherwise 0
       
 join.xy <- left_join(join.xy, DC.s, by = c("row","col")) %>%
   select(-CD_GCUF)
