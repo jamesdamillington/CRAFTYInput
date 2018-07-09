@@ -126,7 +126,7 @@ state <-read_csv("Data/Municipality_area_and_IBGE_code_number.csv")
 DCstates <- c(50,51,41,52,31,35)  #specify which states double cropping is possible in
 DC <- inner_join(join.xy, state, by = c("muniID" = "CD_GCMUN")) %>%
   select(row, col, CD_GCUF) %>%
-  mutate("Double Cropping" = if_else(CD_GCUF %in% DCstates,  1, 0))  #1 if stateID is in list otherwise 0
+  mutate("Growing Season" = if_else(CD_GCUF %in% DCstates,  1, 0))  #1 if stateID is in list otherwise 0
       
 join.xy <- left_join(join.xy, DC, by = c("row","col")) %>%
   select(-CD_GCUF)
@@ -141,7 +141,7 @@ join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
     if_else(LC == 1, "FR5",                 
     if_else(LC == 2, "FR6",                 
     if_else(LC == 3,
-      if_else(`Double Cropping` == 1, "FR3",         #if double cropping possible, always assign
+      if_else(`Growing Season` == 1, "FR3",         #if double cropping possible, always assign
         if_else(rbinom(n(),1,0.5) == 1,"FR1","FR2")),   #if double cropping not possible, randomly assign soy or maize (or should weight by muncipality data on production??) see https://stackoverflow.com/a/31878476 for n()
     if_else(LC == 4, "FR7", "FR8")
     ))))
@@ -212,7 +212,7 @@ muniscsv$Nature[muniscsv$FR=="FR2"]<-0.3
 muniscsv$Nature[muniscsv$FR=="FR1"]<-0.3
 muniscsv$Nature[muniscsv$FR=="FR6"]<-0.6
 muniscsv$Nature[muniscsv$FR=="FR7"]<-0
-muniscsv$"Growing Season"<-0
+#muniscsv$"Growing Season"<-0
 muniscsv$Pasture<-0
 muniscsv$Pasture[muniscsv$FR=="FR6"]<-1
 muniscsv$Other<-0
@@ -240,12 +240,12 @@ muniscsv$Landuse<-NULL
 #muniscsv<-inner_join(muniscsv, statedata, by = "muniID")
 
 names(muniscsv)[1]=""
-muniscsv$`Growing Season`[muniscsv$DoubleCropping==1]<-1
-muniscsv$DoubleCropping<-NULL
-muniscsv$FR[(muniscsv$FR=="FR1"|muniscsv$FR=="FR2")&(muniscsv$`Growing Season`==1)]<-"FR3"
-muniscsv$FR[(muniscsv$FR=="FR3")&(muniscsv$`Growing Season`==0)]<-sample(1:2, nrow(muniscsv), replace=T)
-muniscsv$FR[muniscsv$FR==2]<-"FR2"
-muniscsv$FR[muniscsv$FR==1]<-"FR1"
+#muniscsv$`Growing Season`[muniscsv$DoubleCropping==1]<-1
+#muniscsv$DoubleCropping<-NULL
+#muniscsv$FR[(muniscsv$FR=="FR1"|muniscsv$FR=="FR2")&(muniscsv$`Growing Season`==1)]<-"FR3"
+#muniscsv$FR[(muniscsv$FR=="FR3")&(muniscsv$`Growing Season`==0)]<-sample(1:2, nrow(muniscsv), replace=T)
+#muniscsv$FR[muniscsv$FR==2]<-"FR2"
+#muniscsv$FR[muniscsv$FR==1]<-"FR1"
 write.csv(muniscsv,"region.csv", row.names = F)
 
 
