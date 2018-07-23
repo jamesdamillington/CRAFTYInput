@@ -52,12 +52,16 @@ readMapXYZ <- function(mapz)
 }
 
 
+#need to use region file to identify required XY cells for this simulation
+region <- read_csv("Data/regionPastureB.csv") #warnings but seems to work okay
 
-munis <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #map of municipality IDs to be simulated
-munis.xy <- readMapXYZ(munis)  
+
 
 #loop each year
 for(i in seq_along(sim_yrs)) {
+  
+  #select only few columns we need (and we drop muniID belo also)
+  joined <- dplyr::select(region, Y, X, muniID)
   
   print(sim_yrs[i])
   
@@ -78,13 +82,12 @@ for(i in seq_along(sim_yrs)) {
         dplyr::select(-V1) %>%
         dplyr::rename(Y = row, X = col, !!caps_labs[[j]] := vals)  #see https://stackoverflow.com/a/26003971
       
-      #if we have already created a table, join this new one, else assign xy to joined
-      joined <- if(exists("joined")) left_join(joined, xy, by = c("Y", "X")) else xy 
-
+      joined <- left_join(joined, xy, by = c("Y", "X"))
     }
 
   }
   
+  joined <- joined %>% select(-muniID)
   write_csv(joined,paste0("Data/updates/",scenario,"_update",sim_yrs[i],".csv"))
   
   rm(joined)  #remove joined for next year
