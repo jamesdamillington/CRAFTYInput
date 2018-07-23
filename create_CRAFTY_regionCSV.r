@@ -53,10 +53,10 @@ extractXYZ <- function(raster, nodata = FALSE, addCellID = TRUE){
 }
 
 #read raster data function
-readMapXYZ <- function(path)
+readMapXYZ <- function(mapz)
 {
-  map <- raster(path)     #read raster
-  map <-flip(map, 'y')    #flip maps as CRAFTY read values from the bottom of the map
+  #map <- raster(path)     #read raster
+  map <-flip(mapz, 'y')    #flip maps as CRAFTY read values from the bottom of the map
   map <- extractXYZ(map)  #convert from map to xyz (as tibble)
   return(as.tibble(map))  #return xyz as tibble
 }
@@ -69,17 +69,36 @@ readMapXYZ <- function(path)
 #4 = Other
 #5 = Pasture
 
-
+ofname <- "regionPastureB.csv"  #output filename
+  
+  
 #unzip if needed
 #unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data") 
 
+#read required files
+munis <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #map of municipality IDs to be simulated
+LC <- raster("Data/LandCover2000_PastureB.asc")  #land cover from LandCoverMap.r
+Lpr <- raster('Data/LandPrice2001_Capital.asc')  #land prices from LandPriceMap.r
+agri <- raster('Data/agricultureCapital/agricultureCapital2000.asc')   #agriculture capital from agricultureMap.r 
+infra <- raster('Data/infrastructureCapital/infrastructureCap1997.asc') #infrastrucutre capital from infrastructureMap.r
 
-#read required Map files
-munis.xy <- readMapXYZ("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")  #map of municipality IDs to be simulated
-LC.xy <- readMapXYZ("Data/LandCover2000_PastureB.asc")  #land cover from LandCoverMap.r
-Lpr.xy <- readMapXYZ('Data/LandPrice2001_Capital.asc')  #land prices from LandPriceMap.r
-agri.xy <- readMapXYZ('Data/agricultureCapital/agricultureCapital2000.asc')   #agriculture capital from agricultureMap.r 
-infra.xy <- readMapXYZ('Data/infrastructureCapital/infrastructureCap1997.asc') #infrastrucutre capital from infrastructureMap.r
+#if we want to see input maps
+plt <- F
+if(plt) {
+  plot(munis, main = "munis")
+  plot(LC, main = "LC")
+  plot(Lpr, main = "Lpr")
+  plot(agri, main = "agri")
+  plot(infra, main = "infra")
+}
+
+
+#convert raster to ayz
+munis.xy <- readMapXYZ(munis)  
+LC.xy <- readMapXYZ(LC)  
+Lpr.xy <- readMapXYZ(Lpr)  
+agri.xy <- readMapXYZ(agri)   
+infra.xy <- readMapXYZ(infra) 
 
 
 #create a list of unique municipality id values
@@ -168,5 +187,5 @@ region <- region.xy %>%
   select(V1.x,Y,X,muniID,BT,FR,agentid,Agriculture,Nature,Human,Development,Infrastructure,Economic,Acessibility,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Land Protection`) %>%
   rename(" " = V1.x)
 
-write_csv(region, "Data/region.csv")
+write_csv(region, paste0("Data/",ofname,))
 
