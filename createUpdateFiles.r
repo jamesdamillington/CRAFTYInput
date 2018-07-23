@@ -6,7 +6,7 @@ library(raster)
 
 scenario <- "Testing"
 
-sim_yrs <- seq(2001, 2002, 1)
+sim_yrs <- seq(2001, 2015, 1)
 
 #specify capital filename patterns  (assumes all end 'YEAR.asc'
 agri <- "agricultureCapital" 
