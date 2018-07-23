@@ -17,7 +17,7 @@ library(ncdf4)
 
 
 #read munis.r as latlong
-unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
+#unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
 munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 crs(munis.r) <- latlong
@@ -36,7 +36,7 @@ crs(munis.r) <- latlong
 #the slope map with the above classes is created in slopeMAp.r
 
 #read soil texture and set bucket size (see email from Daniel Victoria 2017-11-21)
-unzip(zipfile="Data/vslope_2018-04-30.zip",exdir="Data")  #unzip
+#unzip(zipfile="Data/vslope_2018-04-30.zip",exdir="Data")  #unzip
 vslope.m<-raster("Data/vslope_2018-04-30.asc")  
 
 
@@ -56,7 +56,7 @@ vslope.m<-raster("Data/vslope_2018-04-30.asc")
 
 #soil is used to calculate plant available water
 #read soil texture and set bucket size (see email from Daniel Victoria 2017-11-21)
-unzip(zipfile="Data/soilT_2018-05-01.zip",exdir="Data")  #unzip
+#unzip(zipfile="Data/soilT_2018-05-01.zip",exdir="Data")  #unzip
 soil<-raster("Data/soilT_2018-05-01.asc")  
 
 #PAW is Plant Available Water
@@ -70,7 +70,7 @@ PAW[PAW==5]<-35
 
 
 #unzip cruts climate data files (if needed)
-unzip(zipfile="Data/cru_ts4.zip",exdir="Data/cruts")  # unzip all files 
+#unzip(zipfile="Data/cru_ts4.zip",exdir="Data/cruts")  # unzip all files 
 
 nc2raster <- function(ncname, ncyear, ncvar)
 {
@@ -148,10 +148,11 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   tmnfn <- fn_fromYearVar(year,"tmn")
   tmxfn <- fn_fromYearVar(year,"tmx")
   
+  #for testing
   #print(tr)
-  print(prefn)
-  print(tmnfn)
-  print(tmxfn)
+  #print(prefn)
+  #print(tmnfn)
+  #print(tmxfn)
   
   #read climate files
   pre <- nc2raster(ncname=prefn,ncyear=tr,ncvar="pre")
@@ -434,7 +435,7 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
 }
 
 
-for(y in 1999:2002)
+for(y in 2002:2016)
 {
   writeClimFiles <- T
   calcAgriMaps(munis.r, PAW, y, BRA.ext)
@@ -443,7 +444,7 @@ for(y in 1999:2002)
 
 
 
-unlink("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
-unlink("Data/soilT_2018-05-01.asc")
-unlink("Data/cruts", recursive = T)
-unlink("Data/vslope_2018-04-30.asc")
+#unlink("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+#unlink("Data/soilT_2018-05-01.asc")
+#unlink("Data/cruts", recursive = T)
+#unlink("Data/vslope_2018-04-30.asc")
