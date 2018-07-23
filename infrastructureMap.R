@@ -33,12 +33,14 @@ plot(d2)
 d2.m<- resample(d2, munis.r, method='bilinear')
 d2.m <- mask(x=d2.m, mask=munis.r)
 
+plot(d2.m)
+
 hist(values(d2.m))
 summary(values(d2.m))
 
 values(d2.m)=values(d2.m)/1000
 values(d2.m)=values(d2.m)*(1/-2530)
-values(r1997)=values(r1997)+1
+values(d2.m)=values(d2.m)+1
 
 #3 lines above equivalent to 
 #values(d2.m)=1+(values(d2.m)/-2530000)
@@ -103,7 +105,7 @@ plot(r1997.m, main="1997rescaled", zlim= c(0.4,1))
 r1997.m <- mask(x=r1997.m, mask=munis.r)
 hist(values(r1997.m))
 plot(r1997.m, main="1997rescaled", zlim= c(0.4,1))
-
+summary(r1997.m)
 #masking removes values <0.7
 
 #now check with 2007 data using same scaling as for 1997 (all Brazil)
@@ -115,13 +117,14 @@ hist(values(r2007.m))
 plot(r2007.m, main="2007rescaled", zlim= c(0.4,1))
 
 #mask to study area
-r2007.m <- mask(x=r2007.m, mask=munis.r, updatevalue=40000,updateNA=F) #supply mask value othewise some cells in mask are NA (use join in create_regionCSV script)  )
-values(r2007.m)=1+(values(r2007.m)/-100000)
+r2007.m <- mask(x=r2007.m, mask=munis.r) #supply mask value othewise some cells in mask are NA (use join in create_regionCSV script)  )
 plot(r2007.m, main="2007rescaled", zlim= c(0.4,1))
-
 
 values(r1997.m)=round(values(r1997.m), digits=3)
 values(r2007.m)=round(values(r2007.m), digits=3)
+
+hist(r1997.m)
+hist(r2007.m)
 
 writeRaster(r1997.m, "Data/infrastructureCap1997", "ascii", "overwrite"=T)
 writeRaster(r2007.m, "Data/infrastructureCap2007", "ascii", "overwrite"=T)
