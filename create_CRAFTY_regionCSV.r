@@ -93,7 +93,7 @@ if(plt) {
 }
 
 
-#convert raster to ayz
+#convert raster to xyz
 munis.xy <- readMapXYZ(munis)  
 LC.xy <- readMapXYZ(LC)  
 Lpr.xy <- readMapXYZ(Lpr)  
@@ -137,12 +137,12 @@ join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
   select(-V1) %>%
   rename(LC = vals) %>%
   mutate(FR = 
-    if_else(LC == 1, "FR5",                 
-    if_else(LC == 2, "FR6",                 
-    if_else(LC == 3,
+    if_else(LC == 1, "FR5",          #Nature        
+    if_else(LC == 2, "FR6",           #Other Agri      
+    if_else(LC == 3,                 #Agri
       if_else(`Growing Season` == 1, "FR3",         #if double cropping possible, always assign
         if_else(rbinom(n(),1,0.5) == 1,"FR1","FR2")),   #if double cropping not possible, randomly assign soy or maize (or should weight by muncipality data on production??) see https://stackoverflow.com/a/31878476 for n()
-    if_else(LC == 4, "FR7", "FR8")
+    if_else(LC == 4, "FR7", "FR8")   #Other or Pasture
     ))))
     
 #FR1 = Soy (LC3 where DC == 0)
@@ -178,14 +178,15 @@ region.xy <- join.xy %>%
   mutate(Development = 1.0) %>%
   mutate(Economic = 1.0) %>%
   mutate(`Land Protection` = 1.0) %>%
-  mutate(Other = if_else(FR == "FR7", 1.0,0)) %>%
-  mutate(`Other Agriculture` = if_else(FR == "FR6", 1.0,0)) %>%
-  mutate(Climate = Agriculture)
+  mutate(Other = if_else(FR == "FR7", 1.0,0)) %>%                #if Other LC set Capital to 1
+  mutate(`Other Agriculture` = if_else(FR == "FR6", 1.0,0)) %>%  #if Other Agri LC set Capital to 1
+  mutate(Climate = Agriculture) %>%
+  mutate(Infrastructure = round(Infrastructure, 3))  #added to prevent many dps (unknown why)
 
 region <- region.xy %>% 
   filter_all(., all_vars(!is.na(.))) %>%
   select(V1.x,Y,X,muniID,BT,FR,agentid,Agriculture,Nature,Human,Development,Infrastructure,Economic,Acessibility,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Land Protection`) %>%
   rename(" " = V1.x)
 
-write_csv(region, paste0("Data/",ofname,))
+write_csv(region, paste0("Data/",ofname))
 
