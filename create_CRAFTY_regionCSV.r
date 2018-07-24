@@ -188,5 +188,5 @@ region <- region.xy %>%
   select(V1.x,Y,X,muniID,BT,FR,agentid,Agriculture,Nature,Human,Development,Infrastructure,Economic,Acessibility,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Land Protection`) %>%
   rename(" " = V1.x)
 
-write_csv(region, paste0("Data/",ofname))
+write.table(region, file=paste0("Data/",ofname), sep=",",row.names=F)
 
