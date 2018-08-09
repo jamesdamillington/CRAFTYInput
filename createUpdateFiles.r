@@ -4,7 +4,7 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "Testing"
+scenario <- "AllOAgri"
 
 sim_yrs <- seq(2001, 2015, 1)
 
@@ -53,7 +53,8 @@ readMapXYZ <- function(mapz)
 
 
 #need to use region file to identify required XY cells for this simulation
-region <- read_csv("Data/regionPastureB.csv") #warnings but seems to work okay
+region <- read_csv("Data/regionPastureB.csv",
+  col_types = cols(`Land Price` = col_double())) #needed to read correct type
 
 
 
