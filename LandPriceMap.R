@@ -35,3 +35,4 @@ writeRaster(Lpr.scaled, "Data/LandPrice2001_Capital_nat1.asc", format = 'ascii',
 #remove unzipped files
 unlink("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 unlink("Data/LandPrice", recursive = T)
+

@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "regionPastureB.csv"  #output filename
+ofname <- "region_newLP.csv"  #output filename
   
   
 #unzip if needed
@@ -78,9 +78,10 @@ ofname <- "regionPastureB.csv"  #output filename
 #read required files
 munis <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #map of municipality IDs to be simulated
 LC <- raster("Data/LandCover2000_PastureB.asc")  #land cover from LandCoverMap.r
-Lpr <- raster('Data/LandPrice2001_Capital.asc')  #land prices from LandPriceMap.r
+Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPriceMap.r
 agri <- raster('Data/agricultureCapital/agricultureCapital2000.asc')   #agriculture capital from agricultureMap.r 
 infra <- raster('Data/infrastructureCapital/infrastructureCap1997.asc') #infrastrucutre capital from infrastructureMap.r
+
 
 #if we want to see input maps
 plt <- F
