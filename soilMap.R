@@ -1,6 +1,6 @@
 #script resamples original soil texture data and converts to values neeed for agricultureMap.r (etc)
 #(code here moved from agriculturesetting.r 2018-07-04) 
-  
+
 rm(list=ls())
 library(raster)
 
