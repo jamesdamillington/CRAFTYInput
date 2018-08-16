@@ -1,10 +1,13 @@
+#create update files from maps 
+#only years for which maps exist will be added in given years
+
 
 rm(list=ls())
 
 library(tidyverse)
 library(raster)
 
-scenario <- "AllOAgri"
+scenario <- "NoOAgri"
 
 sim_yrs <- seq(2001, 2015, 1)
 
@@ -15,11 +18,12 @@ Oagri <- "singleLC_OtherAgri_"
 other <- "singleLC_Other_"
 
 #create list of capitals to work through
-caps <- list(agri, infra, Oagri, other)
+#caps <- list(agri, infra, Oagri, other)
+caps <- list(agri, infra, other)
 
 #labels that need to be use for capitals in the final output file
-caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
-
+#caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
+caps_labs <- list("Agriculture", "Infrastructure", "Other")
 
 #FUNCTIONS
 #raster to xyz  (with help from https://stackoverflow.com/a/19847419)
