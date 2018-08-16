@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region_LandProtect.csv"  #output filename
+ofname <- "region_OAgriSlope.csv"  #output filename
   
   
 #unzip if needed
@@ -82,6 +82,10 @@ Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPric
 agri <- raster('Data/agricultureCapital/agricultureCapital2000.asc')   #agriculture capital from agricultureMap.r 
 infra <- raster('Data/infrastructureCapital/infrastructureCap1997.asc') #infrastrucutre capital from infrastructureMap.r
 Lprotect <- raster('Data/landProtection/ProtectionAreas.asc')
+OAslope <- raster('Data/OAgri-slope_2018-08-16.asc')  #other agriculture cap set to slope 
+
+OAslope <- round(OAslope, 1)  #round because of long dp
+ 
 
 #if we want to see input maps
 plt <- F
@@ -102,6 +106,7 @@ Lpr.xy <- readMapXYZ(Lpr)
 agri.xy <- readMapXYZ(agri)   
 infra.xy <- readMapXYZ(infra) 
 Lprotect.xy <- readMapXYZ(Lprotect) 
+OAslope.xy <- readMapXYZ(OAslope) 
 
 #create a list of unique municipality id values
 munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
@@ -121,6 +126,9 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   left_join(., Lprotect.xy, by = c("row", "col")) %>%
   select(-V1) %>%
   rename("Land Protection" = vals) %>%  
+  left_join(., OAslope.xy, by = c("row", "col")) %>%
+  select(-V1) %>%
+  rename("Other Agriculture" = vals) %>% 
   filter_all(all_vars(!is.na(.)))      #filter any rows missing data NA values
 
 
@@ -183,7 +191,6 @@ region.xy <- join.xy %>%
   mutate(Development = 1.0) %>%
   mutate(Economic = 1.0) %>%
   mutate(Other = if_else(FR == "FR7", 1.0,0)) %>%                #if Other LC set Capital to 1
-  mutate(`Other Agriculture` = if_else(FR == "FR6", 1.0,0)) %>%  #if Other Agri LC set Capital to 1
   mutate(Climate = Agriculture) %>%
   mutate(Infrastructure = round(Infrastructure, 3))  #added to prevent many dps (unknown why)
 
