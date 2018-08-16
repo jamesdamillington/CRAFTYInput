@@ -7,12 +7,12 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "NoOAgri"
+scenario <- "Agri_p02"
 
 sim_yrs <- seq(2001, 2015, 1)
 
 #specify capital filename patterns  (assumes all end 'YEAR.asc'
-agri <- "agricultureCapital" 
+agri <- "agricultureCapital_p02_" 
 infra <- "infrastructureCap"
 Oagri <- "singleLC_OtherAgri_"
 other <- "singleLC_Other_"
