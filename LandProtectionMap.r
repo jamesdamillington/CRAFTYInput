@@ -48,11 +48,11 @@ Soy_bin[is.na(Soy_bin)] <- 1  #set NAs to 1 (unprotected)
 writeRaster(Soy_bin, "Data/Soy_ProtectionMap_2006.asc", format = 'ascii', overwrite=T)
 
 #lc 2008 needed for Beef Moratorium
-lc2008 <- raster("Data/ObservedLCmaps/brazillc_2008_PastureB.asc")
+lc2009 <- raster("Data/ObservedLCmaps/brazillc_2009_PastureB.asc")
 
 #where 2008 nature AND Amazon Biome, Pature should be prevented
 Pas_bin <- Amzn
-Pas_bin[lc2008 != 1] <- NA
+Pas_bin[lc2009 != 1] <- NA
 
 #then combine with 'standard' land protection
 Pas_bin[LP_bin == 0] <- 1
@@ -62,5 +62,5 @@ Pas_bin[Pas_bin == 1] <- 0 #reverse so protected is 0
 Pas_bin[is.na(Pas_bin)] <- 1  #set NAs to 1 (unprotected)
 
 #output data
-writeRaster(Soy_bin, "Data/Pasture_ProtectionMap_2008.asc", format = 'ascii', overwrite=T)
+writeRaster(Pas_bin, "Data/Pasture_ProtectionMap_2009.asc", format = 'ascii', overwrite=T)
 
