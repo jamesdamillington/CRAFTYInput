@@ -54,6 +54,7 @@ readMapXYZ <- function(mapz)
   #map <- raster(path)     #read raster
   map <-flip(mapz, 'y')    #flip maps as CRAFTY read values from the bottom of the map
   map <- extractXYZ(map)  #convert from map to xyz (as tibble)
+  map <- round(map, 3)
   return(as.tibble(map))  #return xyz as tibble
 }
 
@@ -87,7 +88,10 @@ for(i in seq_along(sim_yrs)) {
       #create table for this year
       xy <- xy %>% 
         dplyr::select(-V1) %>%
-        dplyr::rename(Y = row, X = col, !!caps_labs[[j]] := vals)  #see https://stackoverflow.com/a/26003971
+        dplyr::rename(Y = row, X = col, !!caps_labs[[j]] := vals) %>% #see https://stackoverflow.com/a/26003971
+        mutate(Y = round(Y,3)) %>%
+        mutate(X = round(X,3))
+            
       
       joined <- left_join(joined, xy, by = c("Y", "X"))
     }
