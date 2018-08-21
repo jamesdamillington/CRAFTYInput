@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region_OAgriSlope.csv"  #output filename
+ofname <- "region_ServiceLPs.csv"  #output filename
   
   
 #unzip if needed
@@ -81,7 +81,8 @@ LC <- raster("Data/LandCover2000_PastureB.asc")  #land cover from LandCoverMap.r
 Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPriceMap.r
 agri <- raster('Data/agricultureCapital/agricultureCapital2000.asc')   #agriculture capital from agricultureMap.r 
 infra <- raster('Data/infrastructureCapital/infrastructureCap1997.asc') #infrastrucutre capital from infrastructureMap.r
-Lprotect <- raster('Data/landProtection/ProtectionAreas.asc')
+Lprotect <- raster('Data/landProtection/ProtectionAreas.asc') #land protection is intially identical for all services
+
 OAslope <- raster('Data/OAgri-slope_2018-08-16.asc')  #other agriculture cap set to slope 
 
 OAslope <- round(OAslope, 1)  #round because of long dp
@@ -114,6 +115,7 @@ u.mids <- unique(munis.r)
 
 
 #joins (because Infrastructure, Agriculture, Land Price maps are not perfectly aligned with munis.r)
+#four service land protections use the same initial conditions
 join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   select(-V1.y) %>%
   rename(muniID = vals.x, Infrastructure = vals.y) %>%
@@ -125,7 +127,16 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   rename("Agriculture" = vals) %>%  
   left_join(., Lprotect.xy, by = c("row", "col")) %>%
   select(-V1) %>%
-  rename("Land Protection" = vals) %>%  
+  rename("Soy Protection" = vals) %>%  
+  left_join(., Lprotect.xy, by = c("row", "col")) %>%
+  select(-V1) %>%
+  rename("Maize Protection" = vals) %>% 
+  left_join(., Lprotect.xy, by = c("row", "col")) %>%
+  select(-V1) %>%
+  rename("Pasture Protection" = vals) %>% 
+  left_join(., Lprotect.xy, by = c("row", "col")) %>%
+  select(-V1) %>%
+  rename("OAgri Protection" = vals) %>% 
   left_join(., OAslope.xy, by = c("row", "col")) %>%
   select(-V1) %>%
   rename("Other Agriculture" = vals) %>% 
@@ -196,7 +207,7 @@ region.xy <- join.xy %>%
 
 region <- region.xy %>% 
   filter_all(., all_vars(!is.na(.))) %>%
-  select(V1.x,Y,X,muniID,BT,FR,agentid,Agriculture,Nature,Human,Development,Infrastructure,Economic,Acessibility,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Land Protection`) %>%
+  select(V1.x,Y,X,muniID,BT,FR,agentid,Agriculture,Nature,Human,Development,Infrastructure,Economic,Acessibility,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Soy Protection`,`Maize Protection`,`Pasture Protection`,`OAgri Protection`) %>%
   rename(" " = V1.x)
 
 write.table(region, file=paste0("Data/",ofname), sep=",",row.names=F) #use write.table to wrap 'Cognitor' and column headers in quotes 
