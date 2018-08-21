@@ -45,7 +45,7 @@ Soy_bin[Soy_bin == 1] <- 0 #reverse so protected is 0
 Soy_bin[is.na(Soy_bin)] <- 1  #set NAs to 1 (unprotected)
 
 #output data
-writeRaster(Soy_bin, "Data/Soy_ProtectionMap.asc", format = 'ascii', overwrite=T)
+writeRaster(Soy_bin, "Data/Soy_ProtectionMap_2006.asc", format = 'ascii', overwrite=T)
 
 #lc 2008 needed for Beef Moratorium
 lc2008 <- raster("Data/ObservedLCmaps/brazillc_2008_PastureB.asc")
@@ -62,5 +62,5 @@ Pas_bin[Pas_bin == 1] <- 0 #reverse so protected is 0
 Pas_bin[is.na(Pas_bin)] <- 1  #set NAs to 1 (unprotected)
 
 #output data
-writeRaster(Soy_bin, "Data/Pasture_ProtectionMap.asc", format = 'ascii', overwrite=T)
+writeRaster(Soy_bin, "Data/Pasture_ProtectionMap_2008.asc", format = 'ascii', overwrite=T)
 
