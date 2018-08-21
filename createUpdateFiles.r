@@ -7,7 +7,7 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "Agri_p02"
+scenario <- "Agri_p02_Moratoria"
 
 sim_yrs <- seq(2001, 2015, 1)
 
@@ -16,14 +16,16 @@ agri <- "agricultureCapital_p02_"
 infra <- "infrastructureCap"
 Oagri <- "singleLC_OtherAgri_"
 other <- "singleLC_Other_"
+Soy_LP <- "Soy_ProtectionMap_"
+Pas_LP <- "Pasture_ProtectionMap_"
 
 #create list of capitals to work through
 #caps <- list(agri, infra, Oagri, other)
-caps <- list(agri, infra, other)
+caps <- list(agri, infra, other, Soy_LP, Pas_LP)
 
 #labels that need to be use for capitals in the final output file
 #caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
-caps_labs <- list("Agriculture", "Infrastructure", "Other")
+caps_labs <- list("Agriculture", "Infrastructure", "Other", "Soy Protection", "Pasture Protection")
 
 #FUNCTIONS
 #raster to xyz  (with help from https://stackoverflow.com/a/19847419)
