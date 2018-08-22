@@ -81,7 +81,7 @@ LC <- raster("Data/LandCover2000_PastureB.asc")  #land cover from LandCoverMap.r
 Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPriceMap.r
 agri <- raster('Data/agricultureCapital/agricultureCapital2000.asc')   #agriculture capital from agricultureMap.r 
 infra <- raster('Data/infrastructureCapital/infrastructureCap1997.asc') #infrastrucutre capital from infrastructureMap.r
-Lprotect <- raster('Data/landProtection/ProtectionAreas.asc') #land protection is intially identical for all services
+Lprotect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
 
 OAslope <- raster('Data/OAgri-slope_2018-08-16.asc')  #other agriculture cap set to slope 
 
