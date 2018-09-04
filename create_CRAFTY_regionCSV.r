@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region_ServiceLPs.csv"  #output filename
+ofname <- "region2001_newCaps.csv"  #output filename
   
   
 #unzip if needed
@@ -77,9 +77,9 @@ ofname <- "region_ServiceLPs.csv"  #output filename
 
 #read required files
 munis <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #map of municipality IDs to be simulated
-LC <- raster("Data/LandCover2000_PastureB.asc")  #land cover from LandCoverMap.r
+LC <- raster("Data/brazillc_2001_PastureB.asc")  #land cover from LandCoverMap.r
 Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPriceMap.r
-agri <- raster('Data/agricultureCapital/agricultureCapital2000.asc')   #agriculture capital from agricultureMap.r 
+agri <- raster('Data/agricultureCapital/agricultureCapital2001.asc')   #agriculture capital from agricultureMap.r 
 infra <- raster('Data/infrastructureCapital/infrastructureCap1997.asc') #infrastrucutre capital from infrastructureMap.r
 Lprotect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
 
@@ -95,7 +95,7 @@ if(plt) {
   plot(LC, main = "LC")
   plot(Lpr, main = "Lpr")
   plot(agri, main = "agri")
-  plot(infra, main = "infra")
+  plot(infra, main = "Port Access")
   plot(Lprotect, main = "Lprotect")
 }
 
@@ -118,7 +118,7 @@ u.mids <- unique(munis.r)
 #four service land protections use the same initial conditions
 join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   select(-V1.y) %>%
-  rename(muniID = vals.x, Infrastructure = vals.y) %>%
+  rename(muniID = vals.x, `Port Access` = vals.y) %>%
   left_join(., Lpr.xy, by = c("row", "col")) %>%
   select(-V1) %>%
   rename("Land Price" = vals) %>%
@@ -187,10 +187,16 @@ join.xy <- join.xy %>%
 
 #add accessibility (NB note typo) (but this is calculated dynamically within CRAFY code)
 join.xy <- join.xy %>%
-  mutate(Acessibility = if_else(FR == "FR5",
+  mutate(`Nature Access` = if_else(FR == "FR5",
     sample(1:20,n(),replace=T)/100,
     sample(90:100,n(),replace=T)/100
   ))
+
+join.xy <- join.xy %>%
+  mutate(`Agri Infrastructure` = if_else(FR == "FR1" | FR == "FR2" | FR == "FR3", 1, 0.4))
+
+join.xy <- join.xy %>%
+  mutate(`OAgri Infrastructure` = if_else(FR == "FR6", 1, 0.4))
 
 
 #add columns that are either uniform or simple row number
@@ -203,11 +209,11 @@ region.xy <- join.xy %>%
   mutate(Economic = 1.0) %>%
   mutate(Other = if_else(FR == "FR7", 1.0,0)) %>%                #if Other LC set Capital to 1
   mutate(Climate = Agriculture) %>%
-  mutate(Infrastructure = round(Infrastructure, 3))  #added to prevent many dps (unknown why)
+  mutate(`Port Access` = round(`Port Access`, 3))  #added to prevent many dps (unknown why)
 
 region <- region.xy %>% 
   filter_all(., all_vars(!is.na(.))) %>%
-  select(V1.x,Y,X,muniID,BT,FR,agentid,Agriculture,Nature,Human,Development,Infrastructure,Economic,Acessibility,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Soy Protection`,`Maize Protection`,`Pasture Protection`,`OAgri Protection`) %>%
+  select(V1.x,Y,X,muniID,BT,FR,agentid,Agriculture,Nature,Human,Development,`Port Access`,Economic,`Nature Access`,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Soy Protection`,`Maize Protection`,`Pasture Protection`,`OAgri Protection`,`Agri Infrastructure`,`OAgri Infrastructure`) %>%
   rename(" " = V1.x)
 
 write.table(region, file=paste0("Data/",ofname), sep=",",row.names=F) #use write.table to wrap 'Cognitor' and column headers in quotes 
