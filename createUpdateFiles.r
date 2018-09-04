@@ -7,13 +7,13 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "Agri_p02_Moratoria"
+scenario <- "Moratoria_wPorts"
 
 sim_yrs <- seq(2001, 2015, 1)
 
 #specify capital filename patterns  (assumes all end 'YEAR.asc'
-agri <- "agricultureCapital_p02_" 
-infra <- "infrastructureCap"
+agri <- "agricultureCapital" 
+PortAccess <- "PortAccessCap"
 Oagri <- "singleLC_OtherAgri_"
 other <- "singleLC_Other_"
 Soy_LP <- "Soy_ProtectionMap_"
@@ -21,11 +21,11 @@ Pas_LP <- "Pasture_ProtectionMap_"
 
 #create list of capitals to work through
 #caps <- list(agri, infra, Oagri, other)
-caps <- list(agri, infra, other, Soy_LP, Pas_LP)
+caps <- list(agri, PortAccess, other, Soy_LP, Pas_LP)
 
 #labels that need to be use for capitals in the final output file
 #caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
-caps_labs <- list("Agriculture", "Infrastructure", "Other", "Soy Protection", "Pasture Protection")
+caps_labs <- list("Agriculture", "Port Access", "Other", "Soy Protection", "Pasture Protection")
 
 #FUNCTIONS
 #raster to xyz  (with help from https://stackoverflow.com/a/19847419)
@@ -98,7 +98,7 @@ for(i in seq_along(sim_yrs)) {
 
   }
   
-  joined <- joined %>% select(-muniID)
+  joined <- joined %>% dplyr::select(-muniID)
   write_csv(joined,paste0("Data/updates/",scenario,"_update",sim_yrs[i],".csv"))
   
   rm(joined)  #remove joined for next year
