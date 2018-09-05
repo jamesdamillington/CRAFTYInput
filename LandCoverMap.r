@@ -1,25 +1,37 @@
-#classify land cover map
+
 
 rm(list=ls())
+
 library(raster)
-library(readxl)
+library(tidyverse)
 
-##Load Data
 
-#unzip if needed. otherwise assumes original land cover maps are in Data/ASCII 
-unzip(zipfile="Data/MapBiomas_23_ASCII_unclassified_allYears.zip",exdir="Data")  # unzip file 
 
-#Classification from Excel
-classification <- read_excel("Data/MapBiomas_CRAFTY_classifications.xlsx", sheet = "PastureB", range="B2:C21", col_names=F)  
-cname <- "PastureB"
+#read Summary table for 2001 - this contains number of cells in each muni (and proportions in each LC)
 
-years <- seq(2000,2001,1)
 
-for(year in years)
-{
-  map <- raster(paste0("Data/ASCII/brazillc_",year,"_5km_int.txt"))
-  map <- reclassify(map, rcl=as.matrix(classification))
-  writeRaster(map, paste0("Data/LandCover",year,"_",cname,".asc"), format = 'ascii', overwrite=T)
-}
+#read planted area data
 
-unlink("Data/ASCII", recursive = T) #delete ASCII directory created above
+read_csv(PlantedArea_2000-2003.csv
+
+
+#From planted area data for 2001 calculate muni proportions (of total area) of:
+- Soybean + Maize  [A_plant]
+- Cotton + Rice + Sugar_Cane + Bean + Sorghum + Wheat [OA_plant]
+
+#Then for 2003 planted area data calculate relative proportion of:
+- Soy (Soy > 0 and M_second_crop < 100)  
+- Maize (Maize > 0 and M_second_crop < 100)
+- Double crop (Soy > 0 and M_second_crop > 100)
+
+#if soybean_2003 == 0; double-crop = 0
+#if Maize_second_crop2003 < 100; double-crop = 0
+
+From mapbiomas data calculate proportions (of municipality) of:
+- agriculture
+- OAgri
+
+Calculate number of OAgri cells needed to match OA_plant:
+- set number of Oagri cells to match planted proportion
+
+#then for remaining Agri cells assign relative prportion of soy, maize, DC
