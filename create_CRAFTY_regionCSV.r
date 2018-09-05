@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region2001_newCaps.csv"  #output filename
+ofname <- "region2001_newCaps_newRoads.csv"  #output filename
   
   
 #unzip if needed
@@ -80,7 +80,7 @@ munis <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #map of municipa
 LC <- raster("Data/brazillc_2001_PastureB.asc")  #land cover from LandCoverMap.r
 Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPriceMap.r
 agri <- raster('Data/agricultureCapital/agricultureCapital2001.asc')   #agriculture capital from agricultureMap.r 
-infra <- raster('Data/infrastructureCapital/infrastructureCap1997.asc') #infrastrucutre capital from infrastructureMap.r
+infra <- raster('Data/PortAccessCapital/PortAccessCap2000.asc') #infrastrucutre capital from infrastructureMap.r
 Lprotect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
 
 OAslope <- raster('Data/OAgri-slope_2018-08-16.asc')  #other agriculture cap set to slope 
