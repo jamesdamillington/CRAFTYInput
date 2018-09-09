@@ -1,9 +1,167 @@
-
+#script to redistribute OtherAgriculture and Agriculture cells based on planted data 
 
 rm(list=ls())
 
 library(raster)
 library(tidyverse)
+
+#raster to xyz  (with help from https://stackoverflow.com/a/19847419)
+#sepcify input raster, whether nodata cells should be output, whether a unique cell ID should be added
+#return is a matrix. note format is row (Y) then col (X)
+extractXYZ <- function(raster, nodata = FALSE, addCellID = TRUE){
+  
+  vals <- raster::extract(raster, 1:ncell(raster))   #specify raster otherwise dplyr used
+  xys <- rowColFromCell(raster,1:ncell(raster))
+  combine <- cbind(xys,vals)
+  
+  if(addCellID){
+    combine <- cbind(1:length(combine[,1]), combine)
+  }
+  
+  if(!nodata){
+    combine <- combine[!rowSums(!is.finite(combine)),]  #from https://stackoverflow.com/a/15773560
+  }
+  
+  return(combine)
+}
+
+
+
+#converts data in CRAFTY output file for a single variable and creates a raster
+outputRaster <- function(data, variable){
+  
+  out <- data %>%
+    dplyr::select(X, Y, !!variable)
+  
+  ras <- rasterFromXYZ(out)
+  
+  return(ras)
+  
+}
+
+
+#function() for each municipality:
+#- compare A obs and desired; change if necessary (increase from OA, decrease to OA)
+#- compare OA obs and desired; change if necessary (increase from Pas, decrease to Pas)
+#convs is the conversions calculated above, lcs is the lc_munis df
+#both should already have been subst to a single muni
+convertLCs <- function(convs, lcs) {
+  
+  #subset data
+  NA_lcs <- filter(lcs, lc == 1 | lc == 4)  #not Agri or Pas
+  P_lcs  <- filter(lcs, lc == 5) 
+  A_lcs <- filter(lcs, lc == 3)
+  OA_lcs <- filter(lcs, lc == 2)
+
+  A_obs <- length(A_lcs$lc)        #for reporting
+  A_diffc = convs$A_final - A_obs  #counter of how many conversions needed
+
+  # print(paste0("A_obs: ",A_obs))
+  # print(paste0("A_target: ",convs$A_final))
+  # print(paste0("A_diffc: ",A_diffc))
+
+  ctr <- 1 #counter to ensure we don't try to access beyond length of tables below
+  
+  # print(OA_lcs)
+  
+  #increase A from OA (2 -> 3)
+  if(is.integer(A_diffc))  #in case where there are no A pixels, A_diffc is not integer 
+  {
+    while(A_diffc > 0) {
+      if(!any(2 %in% OA_lcs$lc)) break   #if there are no values to convert, break
+      if(ctr > length(OA_lcs$lc)) break  #if we are trying to convert more values than available, break
+      
+      OA_lcs[ctr,4] <- 3                 #do the conversion
+     
+      ctr <- ctr + 1                     #update counter
+      A_diffc <- A_diffc - 1             #update counter
+    }  
+    
+    # print(OA_lcs)
+
+    # print(A_lcs)
+
+    ctr <- 1
+    #decrease A to OA (3 -> 2)
+    while(A_diffc < 0) {
+      if(!any(3 %in% A_lcs$lc)) break
+      if(ctr > length(A_lcs$lc)) break
+      
+      A_lcs[ctr,4] <- 2
+      
+      ctr <- ctr + 1
+      A_diffc <- A_diffc + 1
+    }
+  }
+  
+  # print(A_lcs)
+  
+  #update data as we may have made some conversions (makes OA conversions below more accurate)
+  olcs <- bind_rows(NA_lcs, A_lcs, OA_lcs, P_lcs)
+  NA_lcs <- filter(olcs, lc == 1 | lc == 4)  #not Agri or Pas
+  P_lcs  <- filter(olcs, lc == 5) 
+  A_lcs <- filter(olcs, lc == 3)
+  OA_lcs <- filter(olcs, lc == 2)
+
+  OA_obs <- length(OA_lcs$lc)
+  OA_diffc = convs$OA_final - OA_obs
+
+  # print(paste0("OA_obs: ",OA_obs))
+  # print(paste0("OA_target: ",convs$OA_final))
+  # print(paste0("OA_diffc: ",OA_diffc))
+  # print(OA_lcs)
+  
+  ctr <- 1
+  
+  #increase OA from Pas (5 -> 2)
+  if(is.integer(OA_diffc))  #in case where there are no OA pixels, OA_diffc is not integer 
+  {
+    while(OA_diffc > 0) {
+      if(!any(5 %in% P_lcs$lc)) break
+      if(ctr > length(P_lcs$lc)) break
+      
+      P_lcs[ctr,4] <- 2
+  
+      ctr <- ctr + 1
+      OA_diffc <- OA_diffc - 1
+    }
+  
+    ctr <- 1
+    #decrease OA to Pas (2 -> 5)
+    while(OA_diffc < 0) {
+      if(!any(2 %in% OA_lcs$lc)) break
+      if(ctr > length(OA_lcs$lc)) break
+      
+      OA_lcs[ctr,4] <- 5
+      
+      ctr <- ctr + 1
+      OA_diffc <- OA_diffc + 1
+    }
+  }
+  
+  #print(OA_lcs)
+  
+  olcs <- bind_rows(NA_lcs, A_lcs, OA_lcs, P_lcs)
+  
+  #used during testing
+  # if(length(lcs$lc) != length(olcs$lc))
+  # {  
+  #   print(paste0("lcs: ", length(lcs$lc)))
+  #   print(lcs)
+  #   
+  #   print(paste0("olcs: ", length(olcs$lc)))
+  #   print(olcs)
+  #   
+  # }
+
+    
+  # print(paste0("A_obs: ",length(filter(lcs, lc == 3)[,4])))
+  # print(paste0("A_target: ",convs$A_final))
+  # print(paste0("OA_obs: ",length(filter(lcs, lc == 2)[,4])))
+  # print(paste0("OA_target: ",convs$OA_final))
+   
+  return(lcs)
+}
 
 
 
@@ -27,7 +185,6 @@ mapped$A_mapped_cells[mapped$muniID == 5000203] <- new
 old <- mapped$OA_mapped_cells[mapped$muniID == 5000203]
 new <- mapped$OA_mapped_cells[mapped$muniID == 5006275] + old
 mapped$OA_mapped_cells[mapped$muniID == 5000203] <- new 
-  
 
 #mapped %>%
 #  filter(A_mapped_cells > 0) %>%
@@ -165,6 +322,68 @@ j <- j %>%
 #k <- j %>%
 #  filter(OA_final == 99)
 
+#now update map
+#read muniID map -> get x,y,z
+input_path <- "C:/Users/k1076631/Google Drive/Shared/Crafty Telecoupling/Data/"
+
+#load the rasters
+munis.r <- raster(paste0(input_path,"CRAFTYInput/Data/sim10_BRmunis_latlon_5km_2018-04-27.asc"))
+lc.r <- raster("Data/ObservedLCmaps/brazillc_2001_PastureB.asc")
+
+munis.t <- extractXYZ(munis.r, addCellID = F)
+lc.t <- extractXYZ(lc.r, addCellID = F)
+
+munis.t <- as.data.frame(munis.t)
+munis.t <- plyr::rename(munis.t, c("vals" = "muniID"))
+  
+lc.t <- as.data.frame(lc.t)
+lc.t <- plyr::rename(lc.t, c("vals" = "lc"))
+ 
+
+#join observed land cover map (so have x,y,muniID,original LC
+lc_munis <- left_join(as.data.frame(munis.t), as.data.frame(lc.t), by = c("row" = "row", "col" = "col"))
+
+#note: missing cells after join 
+#lcNA <- lc_munis %>% filter(is.na(lc)) 
+
+#for testing
+#this.muniID <- 4202073
+#lcs <- filter(lc_munis, muniID == this.muniID)
+#convs <- filter(j, muniID == this.muniID)
+#convertLCs(convs, lcs)
+
+final <- data.frame() 
+
+#for testing
+#dummy <- c(3527603,3527603,3527504,3527504,3528205)
+  
+#loop through all munis to update https://stackoverflow.com/a/13916342/10219907
+for(i in 1:length(unique(lc_munis$muniID))) {
+
+#for(i in 1:length(unique(dummy))) {  
+  
+  this.muniID <- unique(lc_munis$muniID)[i]
+    
+  #this.muniID <- unique(dummy)[i]
+  print(this.muniID)
+  
+  lcs <- filter(lc_munis, muniID == this.muniID)
+  convs <- filter(j, muniID == this.muniID)
+   
+  this.conv <- convertLCs(convs, lcs)
+  
+  if(i == 1) final <- this.conv
+  else final <- bind_rows(final, this.conv)
+  
+}
+
+final <- final %>% rename(X = row, Y = col) #need to rename for outputRaster function
+
+#this raster does NOT have the same dimensions as the original LC map... how to set to the same
+newlc <- outputRaster(final, "lc")
+writeRaster(newlc, "Data/ObservedLCmaps/NewAgri_brazillc_2001_PastureB.asc", format = 'ascii', overwrite=T)
+
+
 # 
 # #Then for 2003 planted area data calculate relative proportion of:
 # - Soy (Soy > 0 and M_second_crop < 100)  
@@ -176,6 +395,4 @@ j <- j %>%
 # 
 
 # 
-
-
 #then for remaining Agri cells assign relative prportion of soy, maize, DC
