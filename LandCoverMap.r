@@ -4,6 +4,7 @@ rm(list=ls())
 
 library(raster)
 library(tidyverse)
+library(readxl)
 
 #raster to xyz  (with help from https://stackoverflow.com/a/19847419)
 #sepcify input raster, whether nodata cells should be output, whether a unique cell ID should be added
@@ -164,223 +165,243 @@ convertLCs <- function(convs, lcs) {
 }
 
 
+yrs <- seq(2006, 2015, 1)   #maps made for all these years
 
-#read Summary table for 2001 - this contains number of cells in each muni (and proportions in each LC)
-mapped <- read_csv("Data/ObservedLCmaps/LCs2001_PastureB.csv")
+for(yr in seq_along(yrs)){
 
-# From mapbiomas data calculate number of cells for:
-# - agriculture
-# - OAgri
-mapped <- mapped %>%
-  mutate(A_mapped_cells = round(LC3 * NonNAs,0)) %>%
-  mutate(OA_mapped_cells = round(LC2 * NonNAs,0))
-
-
-#muni 5006275 was only created in 2013, partitioned from 5000203
-#so add values from 5006275 to 5000203
-old <- mapped$A_mapped_cells[mapped$muniID == 5000203]
-new <- mapped$A_mapped_cells[mapped$muniID == 5006275] + old
-mapped$A_mapped_cells[mapped$muniID == 5000203] <- new
-
-old <- mapped$OA_mapped_cells[mapped$muniID == 5000203]
-new <- mapped$OA_mapped_cells[mapped$muniID == 5006275] + old
-mapped$OA_mapped_cells[mapped$muniID == 5000203] <- new 
-
-#mapped %>%
-#  filter(A_mapped_cells > 0) %>%
-#  ggplot(aes(x = A_mapped_cells)) +
-#  geom_histogram(binwidth=5)
+  print(paste0("year: ", yrs[yr]))
   
-
-#read planted area data
-planted <- read_csv("Data/ObservedLCmaps/PlantedArea_2000-2003.csv")
-
-# #From planted area data for 2001 calculate number of cells for:
-# - Soybean + Maize  [A_plant]
-# - Cotton + Rice + Sugar_Cane + Bean + Sorghum + Wheat [OA_plant]
-planted <- planted %>%
-  mutate(A_plant_ha = Maize + Soybean) %>%
-  mutate(OA_plant_ha = Cotton + Rice + Sugar_Cane + Bean + Sorghum + Wheat) %>%
-  mutate(A_plant_cells = round(A_plant_ha / 2500, 0)) %>%
-  mutate(OA_plant_cells = round(OA_plant_ha / 2500, 0))  #one cell = 2500ha
-
-#join the data
-joined <- left_join(mapped, planted, by = c("muniID" = "IBGE_CODE"))
-
-#previously used to check the join 
-#(this is where issue with muni 5006275 was discovered
-#munis 4300001 and 4300002 are also missing, but these are large lakes with minimal agriculture
-#missing <- joined %>% 
-#  filter(is.na(A_plant_cells))
-
-
-
-# Calculate number of OAgri, Agri and Pasture cells needed to match OA_plant and A_plant:
-#Overall A_final + OA_final + P_final must equal A_mapped + OA_mapped
-#So:
-#case 1
-#if OA_mapped > OA_planted AND A_mapped < A_planted
-  #then take enough from difference so A_mapped == A_planted, any remainder is pasture 
-#case 2
-#if OA_mapped > OA_planted AND A_mapped >= A_planted
-  #then OA is planted value and remainder is pasture, A_mapped does not change
-#case 3
-#if OA_mapped == OA_planted AND A_mapped < A_planted
-  #then nothing changes
-#case 4
-#if OA_mapped == OA_planted AND A_mapped >= A_planted
-  #then nothing changes
-#case 5
-#if OA_mapped < OA_planted AND A_mapped <= A_planted
-  #then nothing changes
-#case 6
-#if OA_mapped < OA_planted AND A_mapped > A_planted
-  #then add difference from A to OA (so that OA_M == OA_p, or until A_m == A_p) 
-
-
-#calculate differences (used in cases below)
-joined <- joined %>%
-  dplyr::select(muniID, A_mapped_cells, OA_mapped_cells, A_plant_cells, OA_plant_cells) %>%
-  mutate(A_diffc = A_mapped_cells - A_plant_cells) %>%
-  mutate(OA_diffc = OA_mapped_cells - OA_plant_cells)
-
-#case 1
-#if OA_mapped > OA_planted AND A_mapped < A_planted
-  #then take enough from difference so A_mapped == A_planted, any remainder is pasture
-joined <- joined %>%
-  mutate(OA_final = 
-    if_else(OA_diffc > 0 & A_diffc < 0, OA_plant_cells,99))  %>%  
-  mutate(A_final = 
-    if_else(OA_diffc > 0 & A_diffc < 0, 
-      if_else(OA_diffc >= abs(A_diffc), A_plant_cells, A_mapped_cells + OA_diffc),
-      99)) %>%
-  mutate(P_final = 
-    if_else(OA_diffc > 0 & A_diffc < 0,
-      if_else(OA_diffc >= abs(A_diffc), OA_mapped_cells - OA_plant_cells - abs(A_diffc), 0),
-      99))
-
-#case 2
-#if OA_mapped > OA_planted AND A_mapped >= A_planted
-  #then OA is planted value and remainder is pasture, A_mapped does not change
-joined <- joined %>%
-  mutate(OA_final = 
-    if_else(OA_diffc > 0 & A_diffc >= 0, OA_plant_cells, OA_final)) %>%
-  mutate(A_final = 
-      if_else(OA_diffc > 0 & A_diffc >= 0, A_plant_cells, A_final)) %>%
-  mutate(P_final = 
-    if_else(OA_diffc > 0 & A_diffc >= 0, OA_diffc, P_final))
-
-#case 6
-#if OA_mapped < OA_planted AND A_mapped > A_planted
-  #then add difference from A to OA:
-    #if A_diffc <= abs(OA_diffc) OA_final is max possible, otherwise OA_plant (A_final is always A_mapped - A_diffc)
-    #nothing goes to P_final
-joined <- joined %>%
-  mutate(OA_final = 
-    if_else(OA_diffc < 0 & A_diffc > 0,
-      if_else(A_diffc <= abs(OA_diffc), OA_mapped_cells + A_diffc, OA_mapped_cells + abs(OA_diffc)),
-      OA_final)) %>%
-  mutate(A_final = 
-    if_else(OA_diffc < 0 & A_diffc > 0, 
-      if_else(A_diffc <= abs(OA_diffc), A_mapped_cells - A_diffc, A_mapped_cells - abs(OA_diffc)),
-      A_final)) %>%
-  mutate(P_final = 
-    if_else(OA_diffc < 0 & A_diffc > 0, 0, P_final))
-
-
-#case 3
-joined <- joined %>%
-  mutate(OA_final = 
-    if_else(OA_diffc == 0 & A_diffc < 0, 0, OA_final)) %>%
-  mutate(A_final = 
-    if_else(OA_diffc == 0 & A_diffc < 0, 0, A_final)) %>%
-  mutate(P_final = 
-    if_else(OA_diffc == 0 & A_diffc < 0, 0, P_final))
-
-#case 4
-joined <- joined %>%
-  mutate(OA_final = 
-    if_else(OA_diffc == 0 & A_diffc >= 0, 0, OA_final)) %>%
-  mutate(A_final = 
-    if_else(OA_diffc == 0 & A_diffc >= 0, 0, A_final)) %>%
-  mutate(P_final = 
-    if_else(OA_diffc == 0 & A_diffc >= 0, 0, P_final))
-
-#case 5
-joined <- joined %>%
-  mutate(OA_final = 
-    if_else(OA_diffc < 0 & A_diffc <= 0, 0, OA_final)) %>%
-  mutate(A_final = 
-    if_else(OA_diffc < 0 & A_diffc <= 0, 0, A_final)) %>%
-  mutate(P_final = 
-    if_else(OA_diffc < 0 & A_diffc <= 0, 0, P_final))
-
-#check all cells have changed
-#k <- j %>%
-#  filter(OA_final == 99)
-
-#now update map
-#read muniID map -> get x,y,z
-input_path <- "C:/Users/k1076631/Google Drive/Shared/Crafty Telecoupling/Data/"
-
-#load the rasters
-munis.r <- raster(paste0(input_path,"CRAFTYInput/Data/sim10_BRmunis_latlon_5km_2018-04-27.asc"))
-lc.r <- raster("Data/ObservedLCmaps/brazillc_2001_PastureB.asc")
-
-munis.t <- extractXYZ(munis.r, addCellID = F)
-lc.t <- extractXYZ(lc.r, addCellID = F)
-
-munis.t <- as.data.frame(munis.t)
-munis.t <- plyr::rename(munis.t, c("vals" = "muniID"))
+  #read Summary table for this year - this contains number of cells in each muni (and proportions in each LC)
+  mapped <- read_csv(paste0("C:/Users/k1076631/Google Drive/Shared/Crafty Telecoupling/CRAFTY_testing/CRAFTYOutput/Data/SummaryTables/LCs",yrs[yr],"_PastureB.csv"))
   
-lc.t <- as.data.frame(lc.t)
-lc.t <- plyr::rename(lc.t, c("vals" = "lc"))
- 
-
-#join observed land cover map (so have x,y,muniID,original LC
-lc_munis <- left_join(as.data.frame(munis.t), as.data.frame(lc.t), by = c("row" = "row", "col" = "col"))
-
-#note: missing cells after join 
-#lcNA <- lc_munis %>% filter(is.na(lc)) 
-
-#for testing
-#this.muniID <- 4202073
-#lcs <- filter(lc_munis, muniID == this.muniID)
-#convs <- filter(j, muniID == this.muniID)
-#convertLCs(convs, lcs)
-
-final <- data.frame() 
-
-#for testing
-#dummy <- c(3527603,3527603,3527504,3527504,3528205)
+  # From mapbiomas data calculate number of cells for:
+  # - agriculture
+  # - OAgri
+  mapped <- mapped %>%
+    mutate(A_mapped_cells = round(LC3 * NonNAs,0)) %>%
+    mutate(OA_mapped_cells = round(LC2 * NonNAs,0))
   
-#loop through all munis to update https://stackoverflow.com/a/13916342/10219907
-for(i in 1:length(unique(lc_munis$muniID))) {
-
-#for(i in 1:length(unique(dummy))) {  
   
-  this.muniID <- unique(lc_munis$muniID)[i]
+  #muni 5006275 was only created in 2013, partitioned from 5000203
+  #so add values from 5006275 to 5000203
+  old <- mapped$A_mapped_cells[mapped$muniID == 5000203]
+  new <- mapped$A_mapped_cells[mapped$muniID == 5006275] + old
+  mapped$A_mapped_cells[mapped$muniID == 5000203] <- new
+  
+  old <- mapped$OA_mapped_cells[mapped$muniID == 5000203]
+  new <- mapped$OA_mapped_cells[mapped$muniID == 5006275] + old
+  mapped$OA_mapped_cells[mapped$muniID == 5000203] <- new 
+  
+  #mapped %>%
+  #  filter(A_mapped_cells > 0) %>%
+  #  ggplot(aes(x = A_mapped_cells)) +
+  #  geom_histogram(binwidth=5)
     
-  #this.muniID <- unique(dummy)[i]
-  print(this.muniID)
   
-  lcs <- filter(lc_munis, muniID == this.muniID)
-  convs <- filter(joined, muniID == this.muniID)
+  #read planted area data
+  
+  planted <- read_excel(paste0("Data/ObservedLCmaps/PlantedArea_",yrs[yr],".xlsx"), sheet = paste0(yrs[yr]), col_names=T)  
+  #  planted <- read_csv("Data/ObservedLCmaps/PlantedArea_2000-2003.csv")
+  
+  # #From planted area data calculate number of cells for:
+  # - Soybean + Maize  [A_plant]
+  # - Cotton + Rice + Sugar_Cane + Bean + Sorghum + Wheat [OA_plant]
+  
+  #no data for first_crop maize in 2001 and 2002 so use 2003 data
+  if(yrs[yr] == 2001 | yrs[yr] == 2002) {
+    planted <- planted %>%
+      mutate(A_plant_ha = first_crop_2003 + soybean)
+  }
+  else{
+    planted <- planted %>%
+      mutate(A_plant_ha = first_crop + soybean) 
+  }
+  
+  planted <- planted %>%
+    mutate(OA_plant_ha = cotton + rice + sugarcane + bean + sorghum + wheat) %>%
+    mutate(A_plant_cells = round(A_plant_ha / 2500, 0)) %>%
+    mutate(OA_plant_cells = round(OA_plant_ha / 2500, 0))  #one cell = 2500ha
+
+  
+  #join the data
+  joined <- left_join(mapped, planted, by = c("muniID" = "IBGE_CODE"))
+  
+  #previously used to check the join 
+  #(this is where issue with muni 5006275 was discovered
+  #munis 4300001 and 4300002 are also missing, but these are large lakes with minimal agriculture
+  #missing <- joined %>% 
+  #  filter(is.na(A_plant_cells))
+  
+  
+  
+  # Calculate number of OAgri, Agri and Pasture cells needed to match OA_plant and A_plant:
+  #Overall A_final + OA_final + P_final must equal A_mapped + OA_mapped
+  #So:
+  #case 1
+  #if OA_mapped > OA_planted AND A_mapped < A_planted
+    #then take enough from difference so A_mapped == A_planted, any remainder is pasture 
+  #case 2
+  #if OA_mapped > OA_planted AND A_mapped >= A_planted
+    #then OA is planted value and remainder is pasture, A_mapped does not change
+  #case 3
+  #if OA_mapped == OA_planted AND A_mapped < A_planted
+    #then nothing changes
+  #case 4
+  #if OA_mapped == OA_planted AND A_mapped >= A_planted
+    #then nothing changes
+  #case 5
+  #if OA_mapped < OA_planted AND A_mapped <= A_planted
+    #then nothing changes
+  #case 6
+  #if OA_mapped < OA_planted AND A_mapped > A_planted
+    #then add difference from A to OA (so that OA_M == OA_p, or until A_m == A_p) 
+  
+  
+  #calculate differences (used in cases below)
+  joined <- joined %>%
+    dplyr::select(muniID, A_mapped_cells, OA_mapped_cells, A_plant_cells, OA_plant_cells) %>%
+    mutate(A_diffc = A_mapped_cells - A_plant_cells) %>%
+    mutate(OA_diffc = OA_mapped_cells - OA_plant_cells)
+  
+  #case 1
+  #if OA_mapped > OA_planted AND A_mapped < A_planted
+    #then take enough from difference so A_mapped == A_planted, any remainder is pasture
+  joined <- joined %>%
+    mutate(OA_final = 
+      if_else(OA_diffc > 0 & A_diffc < 0, OA_plant_cells,99))  %>%  
+    mutate(A_final = 
+      if_else(OA_diffc > 0 & A_diffc < 0, 
+        if_else(OA_diffc >= abs(A_diffc), A_plant_cells, A_mapped_cells + OA_diffc),
+        99)) %>%
+    mutate(P_final = 
+      if_else(OA_diffc > 0 & A_diffc < 0,
+        if_else(OA_diffc >= abs(A_diffc), OA_mapped_cells - OA_plant_cells - abs(A_diffc), 0),
+        99))
+  
+  #case 2
+  #if OA_mapped > OA_planted AND A_mapped >= A_planted
+    #then OA is planted value and remainder is pasture, A_mapped does not change
+  joined <- joined %>%
+    mutate(OA_final = 
+      if_else(OA_diffc > 0 & A_diffc >= 0, OA_plant_cells, OA_final)) %>%
+    mutate(A_final = 
+        if_else(OA_diffc > 0 & A_diffc >= 0, A_plant_cells, A_final)) %>%
+    mutate(P_final = 
+      if_else(OA_diffc > 0 & A_diffc >= 0, OA_diffc, P_final))
+  
+  #case 6
+  #if OA_mapped < OA_planted AND A_mapped > A_planted
+    #then add difference from A to OA:
+      #if A_diffc <= abs(OA_diffc) OA_final is max possible, otherwise OA_plant (A_final is always A_mapped - A_diffc)
+      #nothing goes to P_final
+  joined <- joined %>%
+    mutate(OA_final = 
+      if_else(OA_diffc < 0 & A_diffc > 0,
+        if_else(A_diffc <= abs(OA_diffc), OA_mapped_cells + A_diffc, OA_mapped_cells + abs(OA_diffc)),
+        OA_final)) %>%
+    mutate(A_final = 
+      if_else(OA_diffc < 0 & A_diffc > 0, 
+        if_else(A_diffc <= abs(OA_diffc), A_mapped_cells - A_diffc, A_mapped_cells - abs(OA_diffc)),
+        A_final)) %>%
+    mutate(P_final = 
+      if_else(OA_diffc < 0 & A_diffc > 0, 0, P_final))
+  
+  
+  #case 3
+  joined <- joined %>%
+    mutate(OA_final = 
+      if_else(OA_diffc == 0 & A_diffc < 0, 0, OA_final)) %>%
+    mutate(A_final = 
+      if_else(OA_diffc == 0 & A_diffc < 0, 0, A_final)) %>%
+    mutate(P_final = 
+      if_else(OA_diffc == 0 & A_diffc < 0, 0, P_final))
+  
+  #case 4
+  joined <- joined %>%
+    mutate(OA_final = 
+      if_else(OA_diffc == 0 & A_diffc >= 0, 0, OA_final)) %>%
+    mutate(A_final = 
+      if_else(OA_diffc == 0 & A_diffc >= 0, 0, A_final)) %>%
+    mutate(P_final = 
+      if_else(OA_diffc == 0 & A_diffc >= 0, 0, P_final))
+  
+  #case 5
+  joined <- joined %>%
+    mutate(OA_final = 
+      if_else(OA_diffc < 0 & A_diffc <= 0, 0, OA_final)) %>%
+    mutate(A_final = 
+      if_else(OA_diffc < 0 & A_diffc <= 0, 0, A_final)) %>%
+    mutate(P_final = 
+      if_else(OA_diffc < 0 & A_diffc <= 0, 0, P_final))
+  
+  #check all cells have changed
+  #k <- j %>%
+  #  filter(OA_final == 99)
+  
+  #now update map
+  #read muniID map -> get x,y,z
+  input_path <- "C:/Users/k1076631/Google Drive/Shared/Crafty Telecoupling/Data/"
+  
+  #load the rasters
+  munis.r <- raster(paste0(input_path,"CRAFTYInput/Data/sim10_BRmunis_latlon_5km_2018-04-27.asc"))
+  lc.r <- raster(paste0("Data/ObservedLCmaps/brazillc_",yrs[yr],"_PastureB.asc"))
+  
+  munis.t <- extractXYZ(munis.r, addCellID = F)
+  lc.t <- extractXYZ(lc.r, addCellID = F)
+  
+  munis.t <- as.data.frame(munis.t)
+  munis.t <- plyr::rename(munis.t, c("vals" = "muniID"))
+    
+  lc.t <- as.data.frame(lc.t)
+  lc.t <- plyr::rename(lc.t, c("vals" = "lc"))
    
-  this.conv <- convertLCs(convs, lcs)
   
-  if(i == 1) final <- this.conv
-  else final <- bind_rows(final, this.conv)
+  #join observed land cover map (so have x,y,muniID,original LC
+  lc_munis <- left_join(as.data.frame(munis.t), as.data.frame(lc.t), by = c("row" = "row", "col" = "col"))
   
+  #note: missing cells after join 
+  #lcNA <- lc_munis %>% filter(is.na(lc)) 
+  
+  #for testing
+  #this.muniID <- 4202073
+  #lcs <- filter(lc_munis, muniID == this.muniID)
+  #convs <- filter(j, muniID == this.muniID)
+  #convertLCs(convs, lcs)
+  
+  final <- data.frame() 
+  
+  #for testing
+  #dummy <- c(3527603,3527603,3527504,3527504,3528205)
+    
+  #loop through all munis to update https://stackoverflow.com/a/13916342/10219907
+  for(i in 1:length(unique(lc_munis$muniID))) {
+  
+  #for(i in 1:length(unique(dummy))) {  
+    
+    this.muniID <- unique(lc_munis$muniID)[i]
+      
+    #this.muniID <- unique(dummy)[i]
+    #print(this.muniID)
+    
+    lcs <- filter(lc_munis, muniID == this.muniID)
+    convs <- filter(joined, muniID == this.muniID)
+     
+    this.conv <- convertLCs(convs, lcs)
+    
+    if(i == 1) final <- this.conv
+    else final <- bind_rows(final, this.conv)
+    
+  }
+  
+  #set final to a raster with same extent as inputs (to the same)with help from https://gis.stackexchange.com/questions/250149/assign-values-to-a-subset-of-cells-of-a-raster)
+  final.r <- raster(munis.r)
+  final.r[] <- NA_real_
+  cells <- cellFromRowCol(final.r, final$row, final$col)
+  final.r[cells] <- final$lc
+  
+  writeRaster(final.r, paste0("Data/ObservedLCmaps/NewAgri_brazillc_",yrs[yr],"_PastureB.asc"), format = 'ascii', overwrite=T)
+
 }
-
-#set final to a raster with same extent as inputs (to the same)with help from https://gis.stackexchange.com/questions/250149/assign-values-to-a-subset-of-cells-of-a-raster)
-final.r <- raster(munis.r)
-final.r[] <- NA_real_
-cells <- cellFromRowCol(final.r, final$row, final$col)
-final.r[cells] <- final$lc
-
-writeRaster(final.r, "Data/ObservedLCmaps/NewAgri_brazillc_2001_PastureB.asc", format = 'ascii', overwrite=T)
 
 
 # 
