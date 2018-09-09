@@ -96,7 +96,7 @@ convertLCs <- function(convs, lcs) {
   
   # print(A_lcs)
   
-  #update data as we may have made some conversions (makes OA conversions below more accurate)
+  #update data as we may have made some conversions that have changed OA_lcs (makes OA conversions below more accurate)
   olcs <- bind_rows(NA_lcs, A_lcs, OA_lcs, P_lcs)
   NA_lcs <- filter(olcs, lc == 1 | lc == 4)  #not Agri or Pas
   P_lcs  <- filter(olcs, lc == 5) 
@@ -160,7 +160,7 @@ convertLCs <- function(convs, lcs) {
   # print(paste0("OA_obs: ",length(filter(lcs, lc == 2)[,4])))
   # print(paste0("OA_target: ",convs$OA_final))
    
-  return(lcs)
+  return(olcs)
 }
 
 
@@ -208,7 +208,7 @@ planted <- planted %>%
 joined <- left_join(mapped, planted, by = c("muniID" = "IBGE_CODE"))
 
 #previously used to check the join 
-#(this is where issued with muni 5006275 was discovered
+#(this is where issue with muni 5006275 was discovered
 #munis 4300001 and 4300002 are also missing, but these are large lakes with minimal agriculture
 #missing <- joined %>% 
 #  filter(is.na(A_plant_cells))
@@ -216,9 +216,7 @@ joined <- left_join(mapped, planted, by = c("muniID" = "IBGE_CODE"))
 
 
 # Calculate number of OAgri, Agri and Pasture cells needed to match OA_plant and A_plant:
-
 #Overall A_final + OA_final + P_final must equal A_mapped + OA_mapped
-
 #So:
 #case 1
 #if OA_mapped > OA_planted AND A_mapped < A_planted
@@ -240,16 +238,16 @@ joined <- left_join(mapped, planted, by = c("muniID" = "IBGE_CODE"))
   #then add difference from A to OA (so that OA_M == OA_p, or until A_m == A_p) 
 
 
-j <- joined %>%
+#calculate differences (used in cases below)
+joined <- joined %>%
   dplyr::select(muniID, A_mapped_cells, OA_mapped_cells, A_plant_cells, OA_plant_cells) %>%
   mutate(A_diffc = A_mapped_cells - A_plant_cells) %>%
   mutate(OA_diffc = OA_mapped_cells - OA_plant_cells)
 
-
 #case 1
 #if OA_mapped > OA_planted AND A_mapped < A_planted
   #then take enough from difference so A_mapped == A_planted, any remainder is pasture
-j <- j %>%
+joined <- joined %>%
   mutate(OA_final = 
     if_else(OA_diffc > 0 & A_diffc < 0, OA_plant_cells,99))  %>%  
   mutate(A_final = 
@@ -264,7 +262,7 @@ j <- j %>%
 #case 2
 #if OA_mapped > OA_planted AND A_mapped >= A_planted
   #then OA is planted value and remainder is pasture, A_mapped does not change
-j <- j %>%
+joined <- joined %>%
   mutate(OA_final = 
     if_else(OA_diffc > 0 & A_diffc >= 0, OA_plant_cells, OA_final)) %>%
   mutate(A_final = 
@@ -277,8 +275,7 @@ j <- j %>%
   #then add difference from A to OA:
     #if A_diffc <= abs(OA_diffc) OA_final is max possible, otherwise OA_plant (A_final is always A_mapped - A_diffc)
     #nothing goes to P_final
-    
-j <- j %>%
+joined <- joined %>%
   mutate(OA_final = 
     if_else(OA_diffc < 0 & A_diffc > 0,
       if_else(A_diffc <= abs(OA_diffc), OA_mapped_cells + A_diffc, OA_mapped_cells + abs(OA_diffc)),
@@ -292,7 +289,7 @@ j <- j %>%
 
 
 #case 3
-j <- j %>%
+joined <- joined %>%
   mutate(OA_final = 
     if_else(OA_diffc == 0 & A_diffc < 0, 0, OA_final)) %>%
   mutate(A_final = 
@@ -301,7 +298,7 @@ j <- j %>%
     if_else(OA_diffc == 0 & A_diffc < 0, 0, P_final))
 
 #case 4
-j <- j %>%
+joined <- joined %>%
   mutate(OA_final = 
     if_else(OA_diffc == 0 & A_diffc >= 0, 0, OA_final)) %>%
   mutate(A_final = 
@@ -310,7 +307,7 @@ j <- j %>%
     if_else(OA_diffc == 0 & A_diffc >= 0, 0, P_final))
 
 #case 5
-j <- j %>%
+joined <- joined %>%
   mutate(OA_final = 
     if_else(OA_diffc < 0 & A_diffc <= 0, 0, OA_final)) %>%
   mutate(A_final = 
@@ -368,7 +365,7 @@ for(i in 1:length(unique(lc_munis$muniID))) {
   print(this.muniID)
   
   lcs <- filter(lc_munis, muniID == this.muniID)
-  convs <- filter(j, muniID == this.muniID)
+  convs <- filter(joined, muniID == this.muniID)
    
   this.conv <- convertLCs(convs, lcs)
   
@@ -377,11 +374,13 @@ for(i in 1:length(unique(lc_munis$muniID))) {
   
 }
 
-final <- final %>% rename(X = row, Y = col) #need to rename for outputRaster function
+#set final to a raster with same extent as inputs (to the same)with help from https://gis.stackexchange.com/questions/250149/assign-values-to-a-subset-of-cells-of-a-raster)
+final.r <- raster(munis.r)
+final.r[] <- NA_real_
+cells <- cellFromRowCol(final.r, final$row, final$col)
+final.r[cells] <- final$lc
 
-#this raster does NOT have the same dimensions as the original LC map... how to set to the same
-newlc <- outputRaster(final, "lc")
-writeRaster(newlc, "Data/ObservedLCmaps/NewAgri_brazillc_2001_PastureB.asc", format = 'ascii', overwrite=T)
+writeRaster(final.r, "Data/ObservedLCmaps/NewAgri_brazillc_2001_PastureB.asc", format = 'ascii', overwrite=T)
 
 
 # 
