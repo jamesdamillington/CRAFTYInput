@@ -47,9 +47,10 @@ outputRaster <- function(data, variable){
 #convs is the conversions calculated above, lcs is the lc_munis df
 #both should already have been subst to a single muni
 convertLCs <- function(convs, lcs) {
-  
+
   #subset data
   NA_lcs <- filter(lcs, lc == 1 | lc == 4)  #not Agri or Pas
+  
   P_lcs  <- filter(lcs, lc == 5) 
   A_lcs <- filter(lcs, lc == 3)
   OA_lcs <- filter(lcs, lc == 2)
@@ -60,13 +61,17 @@ convertLCs <- function(convs, lcs) {
   # print(paste0("A_obs: ",A_obs))
   # print(paste0("A_target: ",convs$A_final))
   # print(paste0("A_diffc: ",A_diffc))
-
+  
+  #print(A_diffc)
+  #print(is.integer(A_diffc))
+  #print(is.na(A_diffc))
+  
   ctr <- 1 #counter to ensure we don't try to access beyond length of tables below
   
   # print(OA_lcs)
   
   #increase A from OA (2 -> 3)
-  if(is.integer(A_diffc))  #in case where there are no A pixels, A_diffc is not integer 
+  if(!is.na(A_diffc))  #in case where there are no A pixels, A_diffc is NA 
   {
     while(A_diffc > 0) {
       if(!any(2 %in% OA_lcs$lc)) break   #if there are no values to convert, break
@@ -79,7 +84,7 @@ convertLCs <- function(convs, lcs) {
     }  
     
     # print(OA_lcs)
-
+    # 
     # print(A_lcs)
 
     ctr <- 1
@@ -98,8 +103,8 @@ convertLCs <- function(convs, lcs) {
   # print(A_lcs)
   
   #update data as we may have made some conversions that have changed OA_lcs (makes OA conversions below more accurate)
-  olcs <- bind_rows(NA_lcs, A_lcs, OA_lcs, P_lcs)
-  NA_lcs <- filter(olcs, lc == 1 | lc == 4)  #not Agri or Pas
+  olcs <- bind_rows(A_lcs, OA_lcs, P_lcs)
+  #NA_lcs <- filter(olcs, lc == 1 | lc == 4)  #not Agri or Pas
   P_lcs  <- filter(olcs, lc == 5) 
   A_lcs <- filter(olcs, lc == 3)
   OA_lcs <- filter(olcs, lc == 2)
@@ -115,14 +120,14 @@ convertLCs <- function(convs, lcs) {
   ctr <- 1
   
   #increase OA from Pas (5 -> 2)
-  if(is.integer(OA_diffc))  #in case where there are no OA pixels, OA_diffc is not integer 
+  if(!is.na(OA_diffc))  #in case where there are no OA pixels, OA_diffc is NA
   {
     while(OA_diffc > 0) {
       if(!any(5 %in% P_lcs$lc)) break
       if(ctr > length(P_lcs$lc)) break
       
       P_lcs[ctr,4] <- 2
-  
+      
       ctr <- ctr + 1
       OA_diffc <- OA_diffc - 1
     }
@@ -140,7 +145,7 @@ convertLCs <- function(convs, lcs) {
     }
   }
   
-  #print(OA_lcs)
+  # print(OA_lcs)
   
   olcs <- bind_rows(NA_lcs, A_lcs, OA_lcs, P_lcs)
   
@@ -156,11 +161,13 @@ convertLCs <- function(convs, lcs) {
   # }
 
     
-  # print(paste0("A_obs: ",length(filter(lcs, lc == 3)[,4])))
+  # print(paste0("A_obs: ",length(filter(olcs, lc == 3)[,4])))
   # print(paste0("A_target: ",convs$A_final))
-  # print(paste0("OA_obs: ",length(filter(lcs, lc == 2)[,4])))
+  # print(paste0("OA_obs: ",length(filter(olcs, lc == 2)[,4])))
   # print(paste0("OA_target: ",convs$OA_final))
-   
+  
+  # print(olcs)
+  
   return(olcs)
 }
 
@@ -169,6 +176,8 @@ yrs <- seq(2006, 2015, 1)   #maps made for all these years
 
 for(yr in seq_along(yrs)){
 
+  #yr <- 1 #for testing
+  
   print(paste0("year: ", yrs[yr]))
   
   #read Summary table for this year - this contains number of cells in each muni (and proportions in each LC)
@@ -211,8 +220,7 @@ for(yr in seq_along(yrs)){
   if(yrs[yr] == 2001 | yrs[yr] == 2002) {
     planted <- planted %>%
       mutate(A_plant_ha = first_crop_2003 + soybean)
-  }
-  else{
+  } else {
     planted <- planted %>%
       mutate(A_plant_ha = first_crop + soybean) 
   }
@@ -369,7 +377,7 @@ for(yr in seq_along(yrs)){
   #convertLCs(convs, lcs)
   
   final <- data.frame() 
-  
+
   #for testing
   #dummy <- c(3527603,3527603,3527504,3527504,3528205)
     
@@ -378,19 +386,21 @@ for(yr in seq_along(yrs)){
   
   #for(i in 1:length(unique(dummy))) {  
     
-    this.muniID <- unique(lc_munis$muniID)[i]
-      
+    #i <- 1 # for testing
     #this.muniID <- unique(dummy)[i]
-    #print(this.muniID)
+
+    this.muniID <- unique(lc_munis$muniID)[i]
     
-    lcs <- filter(lc_munis, muniID == this.muniID)
-    convs <- filter(joined, muniID == this.muniID)
+    lcm <- filter(lc_munis, muniID == this.muniID)
+    js <- filter(joined, muniID == this.muniID)
      
-    this.conv <- convertLCs(convs, lcs)
+    this.conv <- convertLCs(js, lcm)
+    
+    print(this.muniID)
     
     if(i == 1) final <- this.conv
     else final <- bind_rows(final, this.conv)
-    
+
   }
   
   #set final to a raster with same extent as inputs (to the same)with help from https://gis.stackexchange.com/questions/250149/assign-values-to-a-subset-of-cells-of-a-raster)
@@ -402,7 +412,6 @@ for(yr in seq_along(yrs)){
   writeRaster(final.r, paste0("Data/ObservedLCmaps/NewAgri_brazillc_",yrs[yr],"_PastureB.asc"), format = 'ascii', overwrite=T)
 
 }
-
 
 # 
 # #Then for 2003 planted area data calculate relative proportion of:
