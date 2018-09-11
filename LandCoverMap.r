@@ -300,7 +300,7 @@ convertLCs <- function(convs, lcs) {
 }
 
 
-yrs <- seq(2005, 2015, 1)   #maps made for all these years
+yrs <- seq(2001, 2015, 1)   #maps made for all these years
 
 for(yr in seq_along(yrs)){
 
@@ -431,28 +431,19 @@ for(yr in seq_along(yrs)){
 
   }
   
-  
-#test <- left_join(final, lc_munis, by = c("row" = "row", "col" = "col"))  
-  
   #set final to a raster with same extent as inputs (to the same)with help from https://gis.stackexchange.com/questions/250149/assign-values-to-a-subset-of-cells-of-a-raster)
   final.r <- raster(munis.r)
   final.r[] <- NA_real_
   cells <- cellFromRowCol(final.r, final$row, final$col)
   final.r[cells] <- final$lc
-  
+
+  #read protected map 
+  Lprotect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
+
+  #protected and pasture, change to nature
+  final.r[final.r == 5 & Lprotect < 1] <- 1
+
   writeRaster(final.r, paste0("Data/ObservedLCmaps/NewAgri_brazillc_",yrs[yr],"_PastureB.asc"), format = 'ascii', overwrite=T)
 
 }
 
-# 
-# #Then for 2003 planted area data calculate relative proportion of:
-# - Soy (Soy > 0 and M_second_crop < 100)  
-# - Maize (Maize > 0 and M_second_crop < 100)
-# - Double crop (Soy > 0 and M_second_crop > 100)
-# 
-# #if soybean_2003 == 0; double-crop = 0
-# #if Maize_second_crop2003 < 100; double-crop = 0
-# 
-
-# 
-#then for remaining Agri cells assign relative prportion of soy, maize, DC
