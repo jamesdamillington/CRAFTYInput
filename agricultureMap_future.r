@@ -444,11 +444,14 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
   
 }
 
-
-for(y in 2022:2023)
-{
-  calcAgriMaps(munis.r, PAW, y, BRA.ext, RCP=45, writeClimRast=F, writeClimPdf=T)
-  print(paste0(y," done"))
+#loop over rcps
+for(x in c(26, 45, 85)){
+  #loop over years
+  for(y in 2022:2023)
+  {
+    calcAgriMaps(munis.r, PAW, y, BRA.ext, RCP=x, writeClimRast=F, writeClimPdf=T)
+    print(paste0("rcp", x, ", ", y," done"))
+  }
 }
 
 
