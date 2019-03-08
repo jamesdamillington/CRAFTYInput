@@ -144,9 +144,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
 {
   #generate timeRange and filenames for this year
   tr <- y_fromYear(year)
-  prefn <- fn_fromYearVar(year,"pre")
-  tmnfn <- fn_fromYearVar(year,"tmn")
-  tmxfn <- fn_fromYearVar(year,"tmx")
+  prefn <- fn_fromYearVar(year,"pre") #precipitation,	millimetres per month  see: https://crudata.uea.ac.uk/cru/data/hrg/#info 
+  tmnfn <- fn_fromYearVar(year,"tmn") #monthly average daily minimum temperature,	degrees Celsiusunits are
+  tmxfn <- fn_fromYearVar(year,"tmx") #monthly average daily maximum temperature,	degrees Celsius
   
   #for testing
   #print(tr)
