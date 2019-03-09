@@ -295,37 +295,37 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
   #write data to files
   if(writeClimRast)
   {
-    writeRaster(avDEF, paste0(outputDir,"DEF",year,"_rcp",RCP,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(avPET, paste0(outputDir,"PET",year,"_rcp",RCP,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avDEF, paste0(outputDir,"DEF_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avPET, paste0(outputDir,"PET_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
   }
   
   if(writeClimPdf)
   {
-    pdf(paste0(outputDir,"Temperature",year,"_rcp",RCP,".pdf"))
+    pdf(paste0(outputDir,"Temperature_rcp",RCP,"_",year,".pdf"))
     plot(avtemp.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"Precip",year,"_rcp",RCP,".pdf"))
+    pdf(paste0(outputDir,"Precip_rcp",RCP,"_",year,".pdf"))
     plot(pre.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"DEF",year,"_rcp",RCP,".pdf"))
+    pdf(paste0(outputDir,"DEF_rcp",RCP,"_",year,".pdf"))
     plot(DEF.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"PET",year,"_rcp",RCP,".pdf"))
+    pdf(paste0(outputDir,"PET_rcp",RCP,"_",year,".pdf"))
     plot(PET.b, ext = BRA.e)
     dev.off()
 
-    pdf(paste0(outputDir,"ET",year,"_rcp",RCP,".pdf"))
+    pdf(paste0(outputDir,"ET_rcp",RCP,"_",year,".pdf"))
     plot(ET.b, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"meanDEF",year,"_rcp",RCP,".pdf"))
+    pdf(paste0(outputDir,"meanDEF_rcp",RCP,"_",year,".pdf"))
     plot(avDEF, ext = BRA.e)
     dev.off()
     
-    pdf(paste0(outputDir,"meanPET",year,"_rcp",RCP,".pdf"))
+    pdf(paste0(outputDir,"meanPET_rcp",RCP,"_",year,".pdf"))
     plot(avPET, ext = BRA.e)
     dev.off()
   }
@@ -389,9 +389,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
   #par(mfrow=c(1,1))
   #plot(Agri1)
   
-  writeRaster(Agri1, paste0(outputDir,"agriClimateSlope",year,"_rcp",RCP,".asc"), format = 'ascii', overwrite=T)
+  writeRaster(Agri1, paste0(outputDir,"agriClimateSlope_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
   
-  pdf(paste0(outputDir,"agriClimateSlope",year,"_rcp",RCP,".pdf"))
+  pdf(paste0(outputDir,"agriClimateSlope_rcp",RCP,"_",year,".pdf"))
   plot(Agri1, ext = BRA.e)
   dev.off()
   
@@ -434,9 +434,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
   values(vagri.f)[values(vagri.f)>1]=0                              #worst
 
   #!check does this need to be resampled/masked before writing?!
-  writeRaster(vagri.f, paste0(outputDir,"agricultureCapital",year,"_rcp",RCP,".asc"), format = 'ascii', overwrite=T)
+  writeRaster(vagri.f, paste0(outputDir,"agricultureCapital_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
   
-  pdf(paste0(outputDir,"agricultureCapital",year,"_rcp",RCP,".pdf"))
+  pdf(paste0(outputDir,"agricultureCapital_rcp",RCP,"_",year,".pdf"))
   plot(vagri.f, ext = BRA.e)
   dev.off()
   
@@ -447,7 +447,7 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
 #loop over rcps
 for(x in c(26, 45, 85)){
   #loop over years
-  for(y in 2022:2023)
+  for(y in 2015:2050)
   {
     calcAgriMaps(munis.r, PAW, y, BRA.ext, RCP=x, writeClimRast=F, writeClimPdf=T)
     print(paste0("rcp", x, ", ", y," done"))
