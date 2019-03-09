@@ -7,9 +7,9 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "Moratoria_wPorts"
+scenario <- "ClimateRCP85"
 
-sim_yrs <- seq(2001, 2015, 1)
+sim_yrs <- seq(2015, 2050, 1)
 
 #specify capital filename patterns  (assumes all end 'YEAR.asc'
 agri <- "agricultureCapital" 
@@ -19,14 +19,30 @@ other <- "singleLC_Other_"
 Soy_LP <- "Soy_ProtectionMap_"
 Pas_LP <- "Pasture_ProtectionMap_"
 
+#need to use region file to identify required XY cells for this simulation
+region <- read_csv("Data/region2015.csv",
+  col_types = cols(`Land Price` = col_double(),
+    Other  = col_double(),
+    `Soy Protection` = col_double(),
+    `Maize Protection` = col_double(),
+    `Pasture Protection` = col_double(),
+    `OAgri Protection` = col_double(),
+    `Agri Infrastructure` = col_double(),
+    `OAgri Infrastructure` = col_double()
+    )
+  ) #needed to read correct type
+
+
 #create list of capitals to work through
 #caps <- list(agri, infra, Oagri, other)
-caps <- list(agri, PortAccess, other, Soy_LP, Pas_LP)
-
+#caps <- list(agri, PortAccess, other, Soy_LP, Pas_LP)
+caps <- list(agri)
+  
 #labels that need to be use for capitals in the final output file
 #caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
-caps_labs <- list("Agriculture", "Port Access", "Other", "Soy Protection", "Pasture Protection")
-
+#caps_labs <- list("Agriculture", "Port Access", "Other", "Soy Protection", "Pasture Protection")
+caps_labs <- list("Agriculture")
+  
 #FUNCTIONS
 #raster to xyz  (with help from https://stackoverflow.com/a/19847419)
 #sepcify input raster, whether nodata cells should be output, whether a unique cell ID should be added
@@ -57,12 +73,6 @@ readMapXYZ <- function(mapz)
   map <- round(map, 3)
   return(as.tibble(map))  #return xyz as tibble
 }
-
-
-#need to use region file to identify required XY cells for this simulation
-region <- read_csv("Data/regionPastureB.csv",
-  col_types = cols(`Land Price` = col_double())) #needed to read correct type
-
 
 
 #loop each year
