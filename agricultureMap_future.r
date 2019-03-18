@@ -395,6 +395,17 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
   plot(Agri1, ext = BRA.e)
   dev.off()
   
+  
+  #create map of double cropping
+  #discussion with Ramon by email in March 2019 suggested that DC is not possible on limitation 3 and 4
+  dc.f <- Agri1
+  values(dc.f)[values(dc.f)==0 | values(dc.f)==2] = 1 
+  values(dc.f)[values(dc.f)==3 | values(dc.f)==4] = 0 
+  writeRaster(dc.f, paste0("Data/DC",year,".asc"), format = 'ascii', overwrite=T)
+  
+  pdf(paste0("Data/DC",year,".pdf"))
+  plot(dc.f, ext = BRA.e)
+  dev.off()
  
   
   #Considering the two variables, we join by combining the 6 classes of slope with the 5 classes of climate, resulting in 30 combinations grouped according to the table (below).
