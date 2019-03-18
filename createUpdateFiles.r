@@ -7,21 +7,23 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "ClimateRCP85"
+scenario <- "ClimateRCP26_DC"
 
-sim_yrs <- seq(2015, 2050, 1)
+sim_yrs <- seq(2015, 2030, 1)
 
 #specify capital filename patterns  (assumes all end 'YEAR.asc'
-agri <- "agricultureCapital" 
+agri <- "agricultureCapital_rcp26_" 
 PortAccess <- "PortAccessCap"
 Oagri <- "singleLC_OtherAgri_"
 other <- "singleLC_Other_"
 Soy_LP <- "Soy_ProtectionMap_"
 Pas_LP <- "Pasture_ProtectionMap_"
+GrowSeason <- "DC_rcp26_"
 
 #need to use region file to identify required XY cells for this simulation
 region <- read_csv("Data/region2015.csv",
   col_types = cols(`Land Price` = col_double(),
+    `Growing Season` = col_double(),
     Other  = col_double(),
     `Soy Protection` = col_double(),
     `Maize Protection` = col_double(),
@@ -36,12 +38,12 @@ region <- read_csv("Data/region2015.csv",
 #create list of capitals to work through
 #caps <- list(agri, infra, Oagri, other)
 #caps <- list(agri, PortAccess, other, Soy_LP, Pas_LP)
-caps <- list(agri)
+caps <- list(agri, GrowSeason)
   
 #labels that need to be use for capitals in the final output file
 #caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
 #caps_labs <- list("Agriculture", "Port Access", "Other", "Soy Protection", "Pasture Protection")
-caps_labs <- list("Agriculture")
+caps_labs <- list("Agriculture", "Growing Season")
   
 #FUNCTIONS
 #raster to xyz  (with help from https://stackoverflow.com/a/19847419)
