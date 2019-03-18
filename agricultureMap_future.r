@@ -401,9 +401,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
   dc.f <- Agri1
   values(dc.f)[values(dc.f)==0 | values(dc.f)==2] = 1 
   values(dc.f)[values(dc.f)==3 | values(dc.f)==4] = 0 
-  writeRaster(dc.f, paste0("Data/DC",year,".asc"), format = 'ascii', overwrite=T)
+  writeRaster(dc.f, paste0(outputDir,"DC_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
   
-  pdf(paste0("Data/DC",year,".pdf"))
+  pdf(paste0(outputDir,"DC_rcp",RCP,"_",year,".pdf"))
   plot(dc.f, ext = BRA.e)
   dev.off()
  
@@ -456,9 +456,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
 }
 
 #loop over rcps
-for(x in c(26, 45, 85)){
+for(x in c(26, 45)){
   #loop over years
-  for(y in 2015:2050)
+  for(y in 2015:2030)
   {
     calcAgriMaps(munis.r, PAW, y, BRA.ext, RCP=x, writeClimRast=F, writeClimPdf=T)
     print(paste0("rcp", x, ", ", y," done"))
