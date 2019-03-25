@@ -4,9 +4,45 @@
 rm(list = ls())
 library(raster)
 
+#function to clip raster to specified states (specified in states_ls list)
+clipStates <- function(inRaster, statemap, states_ls)
+{
+  #substitute values so that only specified states have data
+  #first create the data frame
+  mdf <- data.frame()
+  for(m in seq_along(states_ls)) {
+    if(m == 1) { 
+      mdf <- data.frame(a=states_ls[m], b=1) 
+    }  else  {  
+      mdf <- rbind(mdf, c(states_ls[m], 1))  
+    }
+  }
+  #now subs in the statemap 
+  statemap <- subs(x=statemap, y=mdf, by=1, which=2, subsWithNA=T)
+  
+  #trim so that statemap is extent of masked data
+  smaskmap <- trim(statemap)
+  
+  #crop pl stack to extent of crop map 
+  inRaster <- crop(inRaster, smaskmap)
+  
+  #mask to extent of desired states
+  inRaster <- mask(inRaster, smaskmap)
+  
+  return(inRaster)
+  
+}
+
 #directory in which to read the data
 inputDir <- "Data/FutureClimate/agriCapital/"
-outputFn <- "ClimateSummaryData.csv"
+outputFn <- "ClimateSummaryData_51.csv"
+
+#specify states to plot (for all states provide empty list)
+#states <- c()  #all states
+states <- c(51) #MT
+
+#raster of stateIDs
+statemap <- raster(paste0(inputDir,"sim10_BRstates_latlon_5km.asc"))
 
 #list of variables to summarise
 Variables <- c("DEF", "PET", "Temperature", "Precipitation", "DrynessIndex")
@@ -38,6 +74,10 @@ for(rcp in c(45,85)){
       #read raster
       ras <- raster(paste0(inputDir,"Annual",var,"_rcp",rcp,"_",year,".asc"))
       
+      #mask if specific states are desired
+      if(!is.null(states)){
+        ras <- clipStates(ras, statemap, states) }
+      
       #calc summary stats
       meanStat <- round(cellStats(ras, stat='mean', na.rm=T, asSample=F), 3)
       medianStat <- round(quantile(ras, probs=c(0.50), na.rm=T, names=F), 3)
@@ -55,5 +95,5 @@ for(rcp in c(45,85)){
   }
 }
 
-#write data to file
+#write data to file (overwrites if exists)
 write.csv(df, paste0(inputDir,outputFn), row.names=F, quote=F)
