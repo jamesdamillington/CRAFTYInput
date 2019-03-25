@@ -178,6 +178,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
   #annual temp raster layer
   Ta<-mean(avtemp.b)
   
+  #total pptn raster layer
+  Pa<-sum(pre.b)
+  
   #set params needed to calculate PET
   Days <- list(31,28,31,30,31,30,31,31,30,31,30,31) #list of days in the month 
   Idex <- 12*((0.2*Ta)^1.514)#1st regional thermal index
@@ -295,8 +298,11 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
   #write data to files
   if(writeClimRast)
   {
-    writeRaster(avDEF, paste0(outputDir,"DEF_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(avPET, paste0(outputDir,"PET_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avDEF, paste0(outputDir,"AnnualDEF_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(avPET, paste0(outputDir,"AnnualPET_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Ta, paste0(outputDir,"AnnualTemperature_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Pa, paste0(outputDir,"AnnualPrecipitation_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(Di, paste0(outputDir,"AnnualDrynessIndex_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
   }
   
   if(writeClimPdf)
@@ -458,9 +464,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
 #loop over rcps
 for(x in c(26, 45)){
   #loop over years
-  for(y in 2015:2030)
+  for(y in 2031:2050)
   {
-    calcAgriMaps(munis.r, PAW, y, BRA.ext, RCP=x, writeClimRast=F, writeClimPdf=T)
+    calcAgriMaps(munis.r, PAW, y, BRA.ext, RCP=x, writeClimRast=T, writeClimPdf=T)
     print(paste0("rcp", x, ", ", y," done"))
   }
 }
