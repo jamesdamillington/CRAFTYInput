@@ -334,12 +334,12 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e)
   
   #Number of months with water deficit
   #helper function
-  countZero <- function(vect)
+  countWD <- function(vect)
   {
-    return(sum(vect == 0))
+    return(sum(vect >5))
   }
   
-  DEFmonths <- calc(DEF.b, countZero)
+  DEFmonths <- calc(DEF.b, countWD)
   Stoidiffc <- allmeanStoi[12] - allmeanStoi[1]
   #Stoidiffc
 

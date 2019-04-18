@@ -340,12 +340,12 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
   
   #Number of months with water deficit
   #helper function
-  countZero <- function(vect)
+  countWD <- function(vect)
   {
-    return(sum(vect == 0))
+    return(sum(vect > 5))
   }
   
-  DEFmonths <- calc(DEF.b, countZero)
+  DEFmonths <- calc(DEF.b, countWD)
   Stoidiffc <- allmeanStoi[12] - allmeanStoi[1]
   #Stoidiffc
 
@@ -462,9 +462,9 @@ calcAgriMaps <- function(munis.r, PAW, year, BRA.e, RCP, writeClimRast, writeCli
 }
 
 #loop over rcps
-for(x in c(26, 45)){
+for(x in c(45, 85)){
   #loop over years
-  for(y in 2031:2050)
+  for(y in 2015:2050)
   {
     calcAgriMaps(munis.r, PAW, y, BRA.ext, RCP=x, writeClimRast=T, writeClimPdf=T)
     print(paste0("rcp", x, ", ", y," done"))
