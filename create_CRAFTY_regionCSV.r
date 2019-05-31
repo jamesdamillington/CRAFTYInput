@@ -5,7 +5,7 @@
 # - map of municipality IDs to be simulated
 # - land cover from LandCoverMap.r
 # - land prices from LandPriceMap.r
-# - agriculture capital from agricultureMap.r 
+# - moisture and growing season capital maps from moistureMap.r 
 # - infrastrucutre capital from infrastructureMap.r
 
 #script now assumes all these munis files are latlong with identical headers (but not that the spatial extent is identicl)
@@ -15,11 +15,11 @@
 # A list of states in which Double Cropping is possible
 
 #Captials derived within this script are:
+# - Moisture
 # - Nature
 # - Human
 # - Development
 # - Economic
-# - Climate (although not sure this is needed??)
 # - Other 
 # - Other Agriculture
 # - Land Protection
@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region2001_newCaps_newRoads.csv"  #output filename
+ofname <- "region2000_moisture.csv"  #output filename
   
   
 #unzip if needed
@@ -77,9 +77,12 @@ ofname <- "region2001_newCaps_newRoads.csv"  #output filename
 
 #read required files
 munis <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #map of municipality IDs to be simulated
-LC <- raster("Data/brazillc_2001_PastureB.asc")  #land cover from LandCoverMap.r
+LC <- raster("Data/PlantedArea_brazillc_PastureB_2001.asc")  #land cover from LandCoverMap.r
 Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPriceMap.r
-agri <- raster('Data/agricultureCapital/agricultureCapital2001.asc')   #agriculture capital from agricultureMap.r 
+
+mois <- raster('Data/Moisture/MoistureCap_OctNovDecJanFebMar_2000S.asc')   #moisture capital from moistureMap.r 
+GS <- raster('Data/Moisture/GSCap_JanFebMarAprMayJun_2000S.asc')   #growing season (double cropper) capital from moistureMap.r 
+
 infra <- raster('Data/PortAccessCapital/PortAccessCap2000.asc') #infrastrucutre capital from infrastructureMap.r
 Lprotect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
 
@@ -94,7 +97,8 @@ if(plt) {
   plot(munis, main = "munis")
   plot(LC, main = "LC")
   plot(Lpr, main = "Lpr")
-  plot(agri, main = "agri")
+  plot(mois, main = "moisture")
+  plot(GS, main = "growing season")
   plot(infra, main = "Port Access")
   plot(Lprotect, main = "Lprotect")
 }
@@ -104,7 +108,8 @@ if(plt) {
 munis.xy <- readMapXYZ(munis)  
 LC.xy <- readMapXYZ(LC)  
 Lpr.xy <- readMapXYZ(Lpr)  
-agri.xy <- readMapXYZ(agri)   
+mois.xy <- readMapXYZ(mois) 
+GS.xy <- readMapXYZ(GS)   
 infra.xy <- readMapXYZ(infra) 
 Lprotect.xy <- readMapXYZ(Lprotect) 
 OAslope.xy <- readMapXYZ(OAslope) 
@@ -114,7 +119,7 @@ munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 u.mids <- unique(munis.r)  
 
 
-#joins (because Infrastructure, Agriculture, Land Price maps are not perfectly aligned with munis.r)
+#joins (because Infrastructure, Moisture, Land Price maps are not perfectly aligned with munis.r)
 #four service land protections use the same initial conditions
 join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   select(-V1.y) %>%
@@ -122,9 +127,12 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   left_join(., Lpr.xy, by = c("row", "col")) %>%
   select(-V1) %>%
   rename("Land Price" = vals) %>%
-  left_join(., agri.xy, by = c("row", "col")) %>%
+  left_join(., mois.xy, by = c("row", "col")) %>%
   select(-V1) %>%
-  rename("Agriculture" = vals) %>%  
+  rename("Moisture" = vals) %>%  
+  left_join(., GS.xy, by = c("row", "col")) %>%
+  select(-V1) %>%
+  rename("Growing Season" = vals) %>% 
   left_join(., Lprotect.xy, by = c("row", "col")) %>%
   select(-V1) %>%
   rename("Soy Protection" = vals) %>%  
@@ -144,16 +152,16 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
 
 
 #DoubleCropping (used for other variables below, but ultimately removed?)
-state <-read_csv("Data/Municipality_area_and_IBGE_code_number.csv")
+#state <-read_csv("Data/Municipality_area_and_IBGE_code_number.csv")
 #Fstate_vals <- c(17,	29,	31,	35,	41,	42,	43,	50,	51,	52)
 
-DCstates <- c(50,51,41,52,31,35)  #specify which states double cropping is possible in
-DC <- inner_join(join.xy, state, by = c("muniID" = "CD_GCMUN")) %>%
-  select(row, col, CD_GCUF) %>%
-  mutate("Growing Season" = if_else(CD_GCUF %in% DCstates,  1, 0))  #1 if stateID is in list otherwise 0
+#DCstates <- c(50,51,41,52,31,35)  #specify which states double cropping is possible in
+#DC <- inner_join(join.xy, state, by = c("muniID" = "CD_GCMUN")) %>%
+#  select(row, col, CD_GCUF) %>%
+#  mutate("Growing Season" = if_else(CD_GCUF %in% DCstates,  1, 0))  #1 if stateID is in list otherwise 0
       
-join.xy <- left_join(join.xy, DC, by = c("row","col")) %>%
-  select(-CD_GCUF)
+#join.xy <- left_join(join.xy, DC, by = c("row","col")) %>%
+#  select(-CD_GCUF)
 
 
 #add LC to the table then use to create FR column (see below for logic)
@@ -164,7 +172,7 @@ join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
     if_else(LC == 1, "FR5",          #Nature        
     if_else(LC == 2, "FR6",           #Other Agri      
     if_else(LC == 3,                 #Agri
-      if_else(`Growing Season` == 1, "FR3",         #if double cropping possible, always assign
+      if_else(`Growing Season` > 0, "FR3",         #if double cropping possible, always assign
         if_else(rbinom(n(),1,0.5) == 1,"FR1","FR2")),   #if double cropping not possible, randomly assign soy or maize (or should weight by muncipality data on production??) see https://stackoverflow.com/a/31878476 for n()
     if_else(LC == 4, "FR7", "FR8")   #Other or Pasture
     ))))
@@ -208,12 +216,12 @@ region.xy <- join.xy %>%
   mutate(Development = 1.0) %>%
   mutate(Economic = 1.0) %>%
   mutate(Other = if_else(FR == "FR7", 1.0,0)) %>%                #if Other LC set Capital to 1
-  mutate(Climate = Agriculture) %>%
+  mutate(Climate = Moisture) %>%
   mutate(`Port Access` = round(`Port Access`, 3))  #added to prevent many dps (unknown why)
 
 region <- region.xy %>% 
   filter_all(., all_vars(!is.na(.))) %>%
-  select(V1.x,Y,X,muniID,BT,FR,agentid,Agriculture,Nature,Human,Development,`Port Access`,Economic,`Nature Access`,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Soy Protection`,`Maize Protection`,`Pasture Protection`,`OAgri Protection`,`Agri Infrastructure`,`OAgri Infrastructure`) %>%
+  select(V1.x,Y,X,muniID,BT,FR,agentid,Moisture,Nature,Human,Development,`Port Access`,Economic,`Nature Access`,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Soy Protection`,`Maize Protection`,`Pasture Protection`,`OAgri Protection`,`Agri Infrastructure`,`OAgri Infrastructure`) %>%
   rename(" " = V1.x)
 
 write.table(region, file=paste0("Data/",ofname), sep=",",row.names=F) #use write.table to wrap 'Cognitor' and column headers in quotes 
