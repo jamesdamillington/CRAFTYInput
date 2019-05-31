@@ -7,18 +7,18 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "ClimateRCP26_DC"
+scenario <- "ClimateRCP85_DC"
 
-sim_yrs <- seq(2015, 2030, 1)
+sim_yrs <- seq(2031, 2050, 1)
 
 #specify capital filename patterns  (assumes all end 'YEAR.asc'
-agri <- "agricultureCapital_rcp26_" 
+agri <- "agricultureCapital_rcp85_" 
 PortAccess <- "PortAccessCap"
 Oagri <- "singleLC_OtherAgri_"
 other <- "singleLC_Other_"
 Soy_LP <- "Soy_ProtectionMap_"
 Pas_LP <- "Pasture_ProtectionMap_"
-GrowSeason <- "DC_rcp26_"
+GrowSeason <- "DC_rcp85_"
 
 #need to use region file to identify required XY cells for this simulation
 region <- read_csv("Data/region2015.csv",
