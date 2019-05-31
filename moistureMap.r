@@ -480,14 +480,14 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS)
     plot(GSCap, ext = BRA.e, main=paste("GSCap",season_label,year,hemi, sep=" "))  #need to use "index_1" to get to months labelled 1 in season_indices
     dev.off()
     
-    writeRaster(GSCap, paste0(outputDir,"/",className,"/GSCap_",season_label,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(GSCap, paste0(outputDir,"/",className,"/GSCap_",season_label,"_",hemi,"_",year,".asc"), format = 'ascii', overwrite=T)
   
   }
   
   if(!GS){
     
     writeRaster(avDi[["index_1"]], paste0(outputDir,"/",className,"/MeanDI_",season_label,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(MoistureCap, paste0(outputDir,"/",className,"/MoistureCap_",season_label,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(MoistureCap, paste0(outputDir,"/",className,"/MoistureCap_",season_label,"_",hemi,"_",year,".asc"), format = 'ascii', overwrite=T)
   
     pdf(paste0(outputDir,"/",className,"/meanDI_",season_label,"_",year,hemi,".pdf"))
     plot(avDi[["index_1"]], ext = BRA.e, main=paste("meanDI",season_label,year,hemi, sep=" "))  #need to use "index_1" to get to months labelled 1 in season_indices
@@ -519,12 +519,12 @@ crops <- list(mz1_season, mz2_season)
 if(!dir.exists(paste0(outputDir,"/",className))) { dir.create(paste0(outputDir,"/",className)) }
 
 
-yr <-2000
-for(yr in 2015:2016)
+#yr <-2000
+for(yr in 2001:2015)
 {
   writeClimRast <- F
   writeClimPdf <- F
-  calcMoistureMaps(munis.r, PAW, yr, BRA.ext, "S", mz1_season, GS = F)
+  calcMoistureMaps(munis.r, PAW, yr, BRA.ext, "S", mz2_season, GS = T)
   print(paste0(yr," done"))
 }
 
