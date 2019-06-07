@@ -7,18 +7,22 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "Moratoria_WPorts_moisture"
+scenario <- "Moratoria_WPorts_moisDev"
 
 sim_yrs <- seq(2001, 2015, 1)
 
-#specify capital filename patterns  (assumes all end 'YEAR.asc'
-mois <- 
+#specify csv containing spatially uniform capital values
+#each row is a year, each column is Capital 
+uniform_caps <- read_csv("Data/UniformCapitals.csv")
+
+#specify capital map filename patterns  (assumes all map files end 'YEAR.asc')
+mois <- "MoistureCap_OctNovDecJanFebMar_S_"
 PortAccess <- "PortAccessCap"
 Oagri <- "singleLC_OtherAgri_"
 other <- "singleLC_Other_"
 Soy_LP <- "Soy_ProtectionMap_"
 Pas_LP <- "Pasture_ProtectionMap_"
-GrowSeason <- 
+GrowSeason <- "GSCap_JanFebMarAprMayJun_S_"
 
 #need to use region file to identify required XY cells for this simulation
 region <- read_csv("Data/region2000_moisture.csv",
@@ -35,15 +39,15 @@ region <- read_csv("Data/region2000_moisture.csv",
   ) #needed to read correct type
 
 
-#create list of capitals to work through
-#caps <- list(agri, infra, Oagri, other)
-#caps <- list(agri, PortAccess, other, Soy_LP, Pas_LP)
-caps <- list(mois, GrowSeason)
+#create list of capital maps to work through
+#map_caps <- list(agri, infra, Oagri, other)
+map_caps <- list(mois, PortAccess, other, Soy_LP, Pas_LP, GrowSeason)
+#map_caps <- list(mois, GrowSeason)
   
 #labels that need to be use for capitals in the final output file
-#caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
-#caps_labs <- list("Agriculture", "Port Access", "Other", "Soy Protection", "Pasture Protection")
-caps_labs <- list("Moisture", "Growing Season")
+#map_caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
+map_caps_labs <- list("Moisture", "Port Access", "Other", "Soy Protection", "Pasture Protection", "Growing Season")
+#map_caps_labs <- list("Moisture", "Growing Season")
   
 #FUNCTIONS
 #raster to xyz  (with help from https://stackoverflow.com/a/19847419)
@@ -86,10 +90,10 @@ for(i in seq_along(sim_yrs)) {
   print(sim_yrs[i])
   
   #loop each capital
-  for(j in seq_along(caps)) {
+  for(j in seq_along(map_caps)) {
   
     #create file name to check
-    filen <- paste0("Data/updates/",caps[j],sim_yrs[i],".asc")    
+    filen <- paste0("Data/updates/",map_caps[j],sim_yrs[i],".asc")    
   
     #if file exists, extract xyz
     if(file_test("-f",filen)) {
@@ -100,7 +104,7 @@ for(i in seq_along(sim_yrs)) {
       #create table for this year
       xy <- xy %>% 
         dplyr::select(-V1) %>%
-        dplyr::rename(Y = row, X = col, !!caps_labs[[j]] := vals) %>% #see https://stackoverflow.com/a/26003971
+        dplyr::rename(Y = row, X = col, !!map_caps_labs[[j]] := vals) %>% #see https://stackoverflow.com/a/26003971
         mutate(Y = round(Y,3)) %>%
         mutate(X = round(X,3))
             
@@ -110,7 +114,21 @@ for(i in seq_along(sim_yrs)) {
 
   }
   
-  joined <- joined %>% dplyr::select(-muniID)
+  #select the uniform capital values for this year (should produce a one-row table)
+  unis <- uniform_caps %>% 
+    filter(Year == !!sim_yrs[i])
+  
+  #repeat the single row to match the number of pixels in the maps above
+  unis_rep <- unis %>% 
+    slice(rep(1:n(), length(joined$Y)))
+
+  #join the mapped and uniform values
+  joined <- cbind(joined, unis_rep)
+  
+  #drop un-necessary columns
+  joined <- joined %>% 
+    dplyr::select(-muniID, -Year)
+
   write_csv(joined,paste0("Data/updates/",scenario,"_update",sim_yrs[i],".csv"))
   
   rm(joined)  #remove joined for next year
