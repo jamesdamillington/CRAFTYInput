@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region2000_moisture.csv"  #output filename
+ofname <- "region2001_noDCnoGS.csv"  #output filename
   
   
 #unzip if needed
@@ -81,7 +81,7 @@ LC <- raster("Data/PlantedArea_brazillc_PastureB_2001.asc")  #land cover from La
 Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPriceMap.r
 
 mois <- raster('Data/Moisture/MoistureCap_OctNovDecJanFebMar_2000S.asc')   #moisture capital from moistureMap.r 
-GS <- raster('Data/Moisture/GSCap_JanFebMarAprMayJun_2000S.asc')   #growing season (double cropper) capital from moistureMap.r 
+#GS <- raster('Data/Moisture/GSCap_JanFebMarAprMayJun_2000S.asc')   #growing season (double cropper) capital from moistureMap.r 
 
 infra <- raster('Data/PortAccessCapital/PortAccessCap2000.asc') #infrastrucutre capital from infrastructureMap.r
 Lprotect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
@@ -90,6 +90,7 @@ OAslope <- raster('Data/OAgri-slope_2018-08-16.asc')  #other agriculture cap set
 
 OAslope <- round(OAslope, 1)  #round because of long dp
  
+agriHarvest <- read_csv("Data/muni2001_harvestAreas.csv", col_types = ("iiiid")) #from DoubleCropping.rmd
 
 #if we want to see input maps
 plt <- F
@@ -109,7 +110,7 @@ munis.xy <- readMapXYZ(munis)
 LC.xy <- readMapXYZ(LC)  
 Lpr.xy <- readMapXYZ(Lpr)  
 mois.xy <- readMapXYZ(mois) 
-GS.xy <- readMapXYZ(GS)   
+#GS.xy <- readMapXYZ(GS)   
 infra.xy <- readMapXYZ(infra) 
 Lprotect.xy <- readMapXYZ(Lprotect) 
 OAslope.xy <- readMapXYZ(OAslope) 
@@ -130,9 +131,9 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   left_join(., mois.xy, by = c("row", "col")) %>%
   select(-V1) %>%
   rename("Moisture" = vals) %>%  
-  left_join(., GS.xy, by = c("row", "col")) %>%
-  select(-V1) %>%
-  rename("Growing Season" = vals) %>% 
+  #left_join(., GS.xy, by = c("row", "col")) %>%
+  #select(-V1) %>%
+  #rename("Growing Season" = vals) %>% 
   left_join(., Lprotect.xy, by = c("row", "col")) %>%
   select(-V1) %>%
   rename("Soy Protection" = vals) %>%  
@@ -150,6 +151,10 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   rename("Other Agriculture" = vals) %>% 
   filter_all(all_vars(!is.na(.)))      #filter any rows missing data NA values
 
+join.xy <- join.xy %>%
+  mutate(`Growing Season` = 0)
+
+
 
 #DoubleCropping (used for other variables below, but ultimately removed?)
 #state <-read_csv("Data/Municipality_area_and_IBGE_code_number.csv")
@@ -164,22 +169,31 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
 #  select(-CD_GCUF)
 
 
-#add LC to the table then use to create FR column (see below for logic)
+#add harvest areas and LC to the table then use to create FR column (see below for logic)
+join.xy <- agriHarvest %>%
+  select(muniID, maize_prop) %>%
+  full_join(., join.xy, by = c("muniID")) 
+
 join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
   select(-V1) %>%
   rename(LC = vals) %>%
+  mutate(rand = runif(n(),0,1)) %>%
   mutate(FR = 
     if_else(LC == 1, "FR5",          #Nature        
     if_else(LC == 2, "FR6",           #Other Agri      
     if_else(LC == 3,                 #Agri
-      if_else(`Growing Season` > 0, "FR3",         #if double cropping possible, always assign
-        if_else(rbinom(n(),1,0.5) == 1,"FR1","FR2")),   #if double cropping not possible, randomly assign soy or maize (or should weight by muncipality data on production??) see https://stackoverflow.com/a/31878476 for n()
+      #if_else(`Growing Season` > 0, "FR3",         #if double cropping possible, always assign
+        #if_else(rbinom(n(),1,0.5) == 1,"FR1","FR2")),   #if double cropping not possible, randomly assign soy or maize (or should weight by muncipality data on production??) see https://stackoverflow.com/a/31878476 for n()
+      if_else(!is.na(maize_prop),
+        if_else(rand <= maize_prop, "FR2", "FR1"),   #maize_prop calculated in DoubleCropping.rmd
+          if_else(rand < 0.5, "FR2", "FR1")),  #because there are some munis mapped that for some reason are not in the IBGE data...
     if_else(LC == 4, "FR7", "FR8")   #Other or Pasture
     ))))
-    
-#FR1 = Soy (LC3 where DC == 0)
-#FR2 = Maize (LC3 where DC == 0)
-#FR3 = Double Crop (soy/maize) (LC3 where DC == 1)
+
+
+#FR1 = Soy (LC3 where based on proportion of area harvested)
+#FR2 = Maize (LC3 where based on proportion of area harvested)
+#FR3 = Double Crop do not include in 2001
 #FR4 = Nature (LC1) [does not exist at model initialisation]
 #FR5 = Stubborn Nature (LC1)
 #FR6 = Other Agri (LC2)
@@ -203,6 +217,7 @@ join.xy <- join.xy %>%
 join.xy <- join.xy %>%
   mutate(`Agri Infrastructure` = if_else(FR == "FR1" | FR == "FR2" | FR == "FR3", 1, 0.4))
 
+
 join.xy <- join.xy %>%
   mutate(`OAgri Infrastructure` = if_else(FR == "FR6", 1, 0.4))
 
@@ -220,9 +235,10 @@ region.xy <- join.xy %>%
   mutate(`Port Access` = round(`Port Access`, 3))  #added to prevent many dps (unknown why)
 
 region <- region.xy %>% 
+  select(-maize_prop) %>%
   filter_all(., all_vars(!is.na(.))) %>%
   select(V1.x,Y,X,muniID,BT,FR,agentid,Moisture,Nature,Human,Development,`Port Access`,Economic,`Nature Access`,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Soy Protection`,`Maize Protection`,`Pasture Protection`,`OAgri Protection`,`Agri Infrastructure`,`OAgri Infrastructure`) %>%
-  rename(" " = V1.x)
+  rename(" " = V1.x) 
 
 write.table(region, file=paste0("Data/",ofname), sep=",",row.names=F) #use write.table to wrap 'Cognitor' and column headers in quotes 
 
