@@ -39,7 +39,7 @@ LP_bin[Indig == 1] <- 0.1
 writeRaster(LP_bin, "Data/All_ProtectionMap.asc", format = 'ascii', overwrite=T)
 
 #lc 2006 needed for Soy Moratorium
-lc2006 <- raster("Data/ObservedLCmaps/brazillc_2006_PastureB.asc")
+lc2006 <- raster("Data/ObservedLCmaps/LandCover2006_PastureB_Disagg.asc")
 
 #where 2006 nature AND Amazon Biome, Soy should be prevented
 Soy_bin <- Amzn
@@ -55,7 +55,7 @@ Soy_bin[LP_bin == 0.1] <- 0.1  #indigenous
 writeRaster(Soy_bin, "Data/Soy_ProtectionMap_2006.asc", format = 'ascii', overwrite=T)
 
 #lc 2008 needed for Beef Moratorium
-lc2009 <- raster("Data/ObservedLCmaps/brazillc_2009_PastureB.asc")
+lc2009 <- raster("Data/ObservedLCmaps/LandCover2009_PastureB_Disagg.asc")
 
 #where 2008 nature AND Amazon Biome, Pature should be prevented
 Pas_bin <- Amzn

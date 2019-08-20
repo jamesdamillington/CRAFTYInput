@@ -3,12 +3,12 @@
 
 #The following map data are needed as inputs
 # - map of municipality IDs to be simulated
-# - land cover from LandCoverMap.r
+# - land cover from LandCoverMap.r (or ClassifyDisaggregateMap.r)
 # - land prices from LandPriceMap.r
 # - moisture and growing season capital maps from moistureMap.r 
 # - infrastrucutre capital from infrastructureMap.r
 
-#script now assumes all these munis files are latlong with identical headers (but not that the spatial extent is identicl)
+#script now assumes all these munis files are latlong with identical headers (but not that the spatial extent is identical)
 
 #Also required:
 # Municipality_area_and_IBGE_code_number.csv
@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region2001_noDCnoGS.csv"  #output filename
+ofname <- "region2001_noDC_HD_2019-08-20.csv"  #output filename
   
   
 #unzip if needed
@@ -77,11 +77,11 @@ ofname <- "region2001_noDCnoGS.csv"  #output filename
 
 #read required files
 munis <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #map of municipality IDs to be simulated
-LC <- raster("Data/PlantedArea_brazillc_PastureB_2001.asc")  #land cover from LandCoverMap.r
+LC <- raster("Data/LandCover2001_PastureB_Disagg.asc")  #land cover from LandCoverMap.r (or ClassifyDisaggregateMap.r)
 Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPriceMap.r
 
-mois <- raster('Data/Moisture/MoistureCap_OctNovDecJanFebMar_2000S.asc')   #moisture capital from moistureMap.r 
-#GS <- raster('Data/Moisture/GSCap_JanFebMarAprMayJun_2000S.asc')   #growing season (double cropper) capital from moistureMap.r 
+mois <- raster('Data/Moisture/MoistureCap_OctNovDecJanFebMar_S_2001.asc')   #moisture capital from moistureMap.r 
+GS <- raster('Data/Moisture/GSCap_JanFebMarAprMayJun_S_2001.asc')   #growing season (double cropper) capital from moistureMap.r 
 
 infra <- raster('Data/PortAccessCapital/PortAccessCap2000.asc') #infrastrucutre capital from infrastructureMap.r
 Lprotect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
@@ -91,6 +91,7 @@ OAslope <- raster('Data/OAgri-slope_2018-08-16.asc')  #other agriculture cap set
 OAslope <- round(OAslope, 1)  #round because of long dp
  
 agriHarvest <- read_csv("Data/muni2001_harvestAreas.csv", col_types = ("iiiid")) #from DoubleCropping.rmd
+
 
 #if we want to see input maps
 plt <- F
@@ -110,7 +111,7 @@ munis.xy <- readMapXYZ(munis)
 LC.xy <- readMapXYZ(LC)  
 Lpr.xy <- readMapXYZ(Lpr)  
 mois.xy <- readMapXYZ(mois) 
-#GS.xy <- readMapXYZ(GS)   
+GS.xy <- readMapXYZ(GS)   
 infra.xy <- readMapXYZ(infra) 
 Lprotect.xy <- readMapXYZ(Lprotect) 
 OAslope.xy <- readMapXYZ(OAslope) 
@@ -123,36 +124,36 @@ u.mids <- unique(munis.r)
 #joins (because Infrastructure, Moisture, Land Price maps are not perfectly aligned with munis.r)
 #four service land protections use the same initial conditions
 join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
-  select(-V1.y) %>%
+  dplyr::select(-V1.y) %>%
   rename(muniID = vals.x, `Port Access` = vals.y) %>%
   left_join(., Lpr.xy, by = c("row", "col")) %>%
-  select(-V1) %>%
+  dplyr::select(-V1) %>%
   rename("Land Price" = vals) %>%
   left_join(., mois.xy, by = c("row", "col")) %>%
-  select(-V1) %>%
+  dplyr::select(-V1) %>%
   rename("Moisture" = vals) %>%  
-  #left_join(., GS.xy, by = c("row", "col")) %>%
-  #select(-V1) %>%
-  #rename("Growing Season" = vals) %>% 
+  left_join(., GS.xy, by = c("row", "col")) %>%
+  dplyr::select(-V1) %>%
+  rename("Growing Season" = vals) %>% 
   left_join(., Lprotect.xy, by = c("row", "col")) %>%
-  select(-V1) %>%
+  dplyr::select(-V1) %>%
   rename("Soy Protection" = vals) %>%  
   left_join(., Lprotect.xy, by = c("row", "col")) %>%
-  select(-V1) %>%
+  dplyr::select(-V1) %>%
   rename("Maize Protection" = vals) %>% 
   left_join(., Lprotect.xy, by = c("row", "col")) %>%
-  select(-V1) %>%
+  dplyr::select(-V1) %>%
   rename("Pasture Protection" = vals) %>% 
   left_join(., Lprotect.xy, by = c("row", "col")) %>%
-  select(-V1) %>%
+  dplyr::select(-V1) %>%
   rename("OAgri Protection" = vals) %>% 
   left_join(., OAslope.xy, by = c("row", "col")) %>%
-  select(-V1) %>%
+  dplyr::select(-V1) %>%
   rename("Other Agriculture" = vals) %>% 
   filter_all(all_vars(!is.na(.)))      #filter any rows missing data NA values
 
-join.xy <- join.xy %>%
-  mutate(`Growing Season` = 0)
+#join.xy <- join.xy %>%
+#  mutate(`Growing Season` = 0)
 
 
 
@@ -171,11 +172,11 @@ join.xy <- join.xy %>%
 
 #add harvest areas and LC to the table then use to create FR column (see below for logic)
 join.xy <- agriHarvest %>%
-  select(muniID, maize_prop) %>%
+  dplyr::select(muniID, maize_prop) %>%
   full_join(., join.xy, by = c("muniID")) 
 
 join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
-  select(-V1) %>%
+  dplyr::select(-V1) %>%
   rename(LC = vals) %>%
   mutate(rand = runif(n(),0,1)) %>%
   mutate(FR = 
@@ -202,24 +203,26 @@ join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
 
 #add nature
 join.xy <- join.xy %>%
-  mutate(Nature = if_else(FR == "FR5", 0.9,       #virgin nature (FR4 not in initial state)      
+  mutate(Nature = if_else(FR == "FR5", 1,       #virgin nature (FR4 not in initial state)      
     if_else(FR == "FR8", 0.6,                     #pasture
     if_else(FR == "FR7", 0, 0.3)                  #other = 0.0, non-pasture agri uses = 0.3
     )))
 
 #add accessibility (NB note typo) (but this is calculated dynamically within CRAFY code)
 join.xy <- join.xy %>%
-  mutate(`Nature Access` = if_else(FR == "FR5",
-    sample(1:20,n(),replace=T)/100,
-    sample(90:100,n(),replace=T)/100
-  ))
-
-join.xy <- join.xy %>%
-  mutate(`Agri Infrastructure` = if_else(FR == "FR1" | FR == "FR2" | FR == "FR3", 1, 0.4))
+#  mutate(`Nature Access` = if_else(FR == "FR5",
+#    sample(1:20,n(),replace=T)/100,
+#    sample(90:100,n(),replace=T)/100
+#    ))
+    mutate(`Nature Access` = if_else(FR == "FR5", 0, 1))
 
 
 join.xy <- join.xy %>%
-  mutate(`OAgri Infrastructure` = if_else(FR == "FR6", 1, 0.4))
+  mutate(`Agri Infrastructure` = if_else(FR == "FR1" | FR == "FR2" | FR == "FR3", 1, 0))
+
+
+join.xy <- join.xy %>%
+  mutate(`OAgri Infrastructure` = if_else(FR == "FR6", 1, 0))
 
 
 #add columns that are either uniform or simple row number
@@ -227,18 +230,17 @@ region.xy <- join.xy %>%
   rename(Y = row, X = col) %>%
   mutate(agentid = row_number()) %>%  #add dummy agent_ID
   mutate(BT = "Cognitor") %>%
-  mutate(Human = 1.0) %>%
-  mutate(Development = 1.0) %>%
+  mutate(Human = 0.264) %>%
+  mutate(Development = 0.233) %>%
   mutate(Economic = 1.0) %>%
   mutate(Other = if_else(FR == "FR7", 1.0,0)) %>%                #if Other LC set Capital to 1
   mutate(Climate = Moisture) %>%
   mutate(`Port Access` = round(`Port Access`, 3))  #added to prevent many dps (unknown why)
 
 region <- region.xy %>% 
-  select(-maize_prop) %>%
-  filter_all(., all_vars(!is.na(.))) %>%
-  select(V1.x,Y,X,muniID,BT,FR,agentid,Moisture,Nature,Human,Development,`Port Access`,Economic,`Nature Access`,Climate,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Soy Protection`,`Maize Protection`,`Pasture Protection`,`OAgri Protection`,`Agri Infrastructure`,`OAgri Infrastructure`) %>%
-  rename(" " = V1.x) 
+  dplyr::select(Y,X,muniID,BT,FR,Moisture,Nature,Human,Development,`Port Access`,Economic,`Nature Access`,`Land Price`,`Growing Season`,`Other Agriculture`,Other,`Soy Protection`,`Maize Protection`,`Pasture Protection`,`OAgri Protection`,`Agri Infrastructure`,`OAgri Infrastructure`) %>%
+  filter_all(., all_vars(!is.na(.))) #%>%
+  #rename(" " = V1.x) 
 
 write.table(region, file=paste0("Data/",ofname), sep=",",row.names=F) #use write.table to wrap 'Cognitor' and column headers in quotes 
 

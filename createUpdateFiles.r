@@ -7,9 +7,9 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "Moratoria_WPorts_moisDev"
+scenario <- "testing_2019-08-20"
 
-sim_yrs <- seq(2001, 2015, 1)
+update_yrs <- seq(2002, 2015, 1)
 
 #specify csv containing spatially uniform capital values
 #each row is a year, each column is Capital 
@@ -25,7 +25,7 @@ Pas_LP <- "Pasture_ProtectionMap_"
 GrowSeason <- "GSCap_JanFebMarAprMayJun_S_"
 
 #need to use region file to identify required XY cells for this simulation
-region <- read_csv("Data/region2000_moisture.csv",
+region <- read_csv("Data/region2001_noDC_HD_2019-08-20.csv",
   col_types = cols(`Land Price` = col_double(),
     `Growing Season` = col_double(),
     Other  = col_double(),
@@ -42,12 +42,12 @@ region <- read_csv("Data/region2000_moisture.csv",
 #create list of capital maps to work through
 #map_caps <- list(agri, infra, Oagri, other)
 map_caps <- list(mois, PortAccess, other, Soy_LP, Pas_LP, GrowSeason)
-#map_caps <- list(mois, GrowSeason)
+#map_caps <- list(PortAccess, other, Soy_LP, Pas_LP)
   
 #labels that need to be use for capitals in the final output file
 #map_caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
 map_caps_labs <- list("Moisture", "Port Access", "Other", "Soy Protection", "Pasture Protection", "Growing Season")
-#map_caps_labs <- list("Moisture", "Growing Season")
+#map_caps_labs <- list("Port Access", "Other", "Soy Protection", "Pasture Protection")
   
 #FUNCTIONS
 #raster to xyz  (with help from https://stackoverflow.com/a/19847419)
@@ -82,18 +82,18 @@ readMapXYZ <- function(mapz)
 
 
 #loop each year
-for(i in seq_along(sim_yrs)) {
+for(i in seq_along(update_yrs)) {
   
   #select only few columns we need (and we drop muniID belo also)
   joined <- dplyr::select(region, Y, X, muniID)
   
-  print(sim_yrs[i])
+  print(update_yrs[i])
   
   #loop each capital
   for(j in seq_along(map_caps)) {
   
     #create file name to check
-    filen <- paste0("Data/updates/",map_caps[j],sim_yrs[i],".asc")    
+    filen <- paste0("Data/updates/",map_caps[j],update_yrs[i],".asc")    
   
     #if file exists, extract xyz
     if(file_test("-f",filen)) {
@@ -116,7 +116,7 @@ for(i in seq_along(sim_yrs)) {
   
   #select the uniform capital values for this year (should produce a one-row table)
   unis <- uniform_caps %>% 
-    filter(Year == !!sim_yrs[i])
+    filter(Year == !!update_yrs[i])
   
   #repeat the single row to match the number of pixels in the maps above
   unis_rep <- unis %>% 
@@ -125,11 +125,17 @@ for(i in seq_along(sim_yrs)) {
   #join the mapped and uniform values
   joined <- cbind(joined, unis_rep)
   
-  #drop un-necessary columns
+  #some Moisture cells seem to ne NA, for now replace with of all non-NA values
+  mois_replace <- round(mean(joined$Moisture, na.rm=T),3)
+  print(mois_replace)
+  
+  #drop un-necessary columns and replace Moisture NAs
   joined <- joined %>% 
-    dplyr::select(-muniID, -Year)
+    dplyr::select(-muniID, -Year) %>%
+    mutate(Moisture = replace(Moisture, is.na(Moisture), mois_replace))
+    
 
-  write_csv(joined,paste0("Data/updates/",scenario,"_update",sim_yrs[i],".csv"))
+  write_csv(joined,paste0("Data/updates/",scenario,"_update",update_yrs[i],".csv"))
   
   rm(joined)  #remove joined for next year
   
