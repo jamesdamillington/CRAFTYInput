@@ -1,15 +1,14 @@
 #create update files from maps 
 #only years for which maps exist will be added in given years
 
-
 rm(list=ls())
 
 library(tidyverse)
 library(raster)
 
-scenario <- "testing_2019-08-20"
+scenario <- "scenario_yields3pc"
 
-update_yrs <- seq(2002, 2015, 1)
+update_yrs <- seq(2016, 2030, 1)
 
 #specify csv containing spatially uniform capital values
 #each row is a year, each column is Capital 
@@ -125,15 +124,21 @@ for(i in seq_along(update_yrs)) {
   #join the mapped and uniform values
   joined <- cbind(joined, unis_rep)
   
-  #some Moisture cells seem to ne NA, for now replace with of all non-NA values
-  mois_replace <- round(mean(joined$Moisture, na.rm=T),3)
-  print(mois_replace)
+  #some Moisture cells seem to be NA, change those values (also need to do this for GrowSeason?)
+  if(exists("Moisture")){
+    # for now replace with mean of all non-NA values
+    mois_replace <- round(mean(joined$Moisture, na.rm=T),3)
+    print(mois_replace)
+    
+    #replace Moisture NAs
+    joined <- joined %>% 
+      mutate(Moisture = replace(Moisture, is.na(Moisture), mois_replace))
+  }
   
   #drop un-necessary columns and replace Moisture NAs
   joined <- joined %>% 
-    dplyr::select(-muniID, -Year) %>%
-    mutate(Moisture = replace(Moisture, is.na(Moisture), mois_replace))
-    
+    dplyr::select(-muniID, -Year)
+      
 
   write_csv(joined,paste0("Data/updates/",scenario,"_update",update_yrs[i],".csv"))
   

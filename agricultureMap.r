@@ -1,3 +1,5 @@
+#DEPRECATED - now use moistureMap.r as Capital has changed. 
+
 #script to create agriculture capital map
 #requires maps from soilMap.r, slopeMap.r and climate data from cru_ts4.zip (via https://crudata.uea.ac.uk/cru/data/hrg/)
 
