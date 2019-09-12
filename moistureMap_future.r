@@ -30,7 +30,7 @@ PAW[PAW==5]<-35
 
 
 #this function January to December (NH agricultural year)
-nc2raster <- function(ncname, ncyear, ncvar)
+nc2raster <- function(rcp, ncyear, ncvar)
 {
   #this is hacked version of cruts2raster function in library(cruts) see https://rdrr.io/cran/cruts/src/R/import-export.R
   #returns a raster stack of 12 layers for a single year from cru_ts data (e.g. http://data.ceda.ac.uk//badc/cru/data/cru_ts/cru_ts_4.01/data/)
@@ -40,7 +40,7 @@ nc2raster <- function(ncname, ncyear, ncvar)
   #ncyear is an integer indicating which year from the ncdf file is to be returned (so for above file ncyear <- 1 would return data for 2001, ncyear <- 4 would give 2004 etc)
   #ncvar is a character string indicating which variable from the nc file to access (e.g. "pre", "tmp")
   
-  #ncname <- fn_fromYearVar(ncyear,ncvar)
+  ncname <- fn_fromRcpYearVar(rcp,ncyear,ncvar)
   nc <- nc_open(ncname)
   pre_array <- ncvar_get(nc,ncvar)
   lon <- ncvar_get(nc,"lon")
@@ -72,7 +72,7 @@ nc2raster <- function(ncname, ncyear, ncvar)
 
 
 #this function July to June (SH agricultural year)
-nc2rasterSH <- function(ncnameB, ncyear, ncvar)
+nc2rasterSH <- function(rcp, ncyear, ncvar)
 {
   #this is hacked version of cruts2raster function in library(cruts) see https://rdrr.io/cran/cruts/src/R/import-export.R
   #returns a raster stack of 12 layers for a single year from cru_ts data (e.g. http://data.ceda.ac.uk//badc/cru/data/cru_ts/cru_ts_4.01/data/)
@@ -91,7 +91,8 @@ nc2rasterSH <- function(ncnameB, ncyear, ncvar)
   
   #so first get the ncdf file in which yrB is located
   
-  #ncnameB <- fn_fromYearVar(ncyear,ncvar)
+  ncnameB <- fn_fromRcpYearVar(rcp,ncyear,ncvar)
+  #print(paste0("reading file ",ncnameB))
   ncB <- nc_open(ncnameB)  #get data for yrB
 
   #get these parameters here (if we need to get for another ncdf file we will below)
@@ -134,8 +135,8 @@ nc2rasterSH <- function(ncnameB, ncyear, ncvar)
   #otherwise data for yrA is in an entirely different ncdf file
   else { 
     
-    ncnameA <- fn_fromYearVar(ncyear-1, ncvar)
-    print(paste0("reading file ",ncnameA))
+    ncnameA <- fn_fromRcpYearVar(rcp,ncyear-1, ncvar)
+    #print(paste0("reading file ",ncnameA))
 
     ncA <- nc_open(ncnameA)  #get data for this year
 
@@ -215,9 +216,9 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
 {
   #generate timeRange and filenames for this year
   tr <- y_fromYear(year)
-  prefn <- fn_fromRcpYearVar(RCP,year,"pr")      # variable_units = kg m-2 s-1, time_frequency = mon, variable_long_name = Precipitation, 
-  tmnfn <- fn_fromRcpYearVar(RCP,year,"tasmin")  # variable_units = K, time_frequency = mon, variable_long_name = Daily Minimum Near-Surface Air Temperature 
-  tmxfn <- fn_fromRcpYearVar(RCP,year,"tasmax")  # variable_units = K, time_frequency = mon, variable_long_name = Daily Maximum Near-Surface Air Temperature  
+  #prefn <- fn_fromRcpYearVar(RCP,year,"pr")      # variable_units = kg m-2 s-1, time_frequency = mon, variable_long_name = Precipitation, 
+  #tmnfn <- fn_fromRcpYearVar(RCP,year,"tasmin")  # variable_units = K, time_frequency = mon, variable_long_name = Daily Minimum Near-Surface Air Temperature 
+  #tmxfn <- fn_fromRcpYearVar(RCP,year,"tasmax")  # variable_units = K, time_frequency = mon, variable_long_name = Daily Maximum Near-Surface Air Temperature  
 
   #month labels for plots
   monlab <- c(paste0("Jan",year),paste0("Feb",year),paste0("Mar",year),paste0("Apr",year),paste0("May",year),paste0("Jun",year),paste0("Jul",year),paste0("Aug",year),paste0("Sep",year),paste0("Oct",year),paste0("Nov",year),paste0("Dec",year))
@@ -239,16 +240,16 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
   
   #northern hemisphere
   if(hemi == "N") {
-    pre <- nc2raster(ncname=prefn,ncyear=year,ncvar="pr")
-    tmn <- nc2raster(ncname=tmnfn,ncyear=year,ncvar="tasmin")
-    tmx <- nc2raster(ncname=tmxfn,ncyear=year,ncvar="tasmax")
+    pre <- nc2raster(rcp=RCP,ncyear=year,ncvar="pr")
+    tmn <- nc2raster(rcp=RCP,ncyear=year,ncvar="tasmin")
+    tmx <- nc2raster(rcp=RCP,ncyear=year,ncvar="tasmax")
   }
   
   #souther hemisphere
   if(hemi == "S") {
-    pre <- nc2rasterSH(ncnameB=prefn,ncyear=year,ncvar="pr")
-    tmn <- nc2rasterSH(ncnameB=tmnfn,ncyear=year,ncvar="tasmin")
-    tmx <- nc2rasterSH(ncnameB=tmxfn,ncyear=year,ncvar="tasmax")
+    pre <- nc2rasterSH(rcp=RCP,ncyear=year,ncvar="pr")
+    tmn <- nc2rasterSH(rcp=RCP,ncyear=year,ncvar="tasmin")
+    tmx <- nc2rasterSH(rcp=RCP,ncyear=year,ncvar="tasmax")
   }
   
   #pdf(paste0("Data/pre",year,".pdf"))
@@ -530,7 +531,7 @@ if(!dir.exists(paste0(outputDir,"/",className))) { dir.create(paste0(outputDir,"
 #loop over rcps
 for(x in c(45, 85)){
   #loop over years
-  for(y in 2016:2017)
+  for(y in 2016:2030)
   {
     for(z in c(TRUE,FALSE))
     {
