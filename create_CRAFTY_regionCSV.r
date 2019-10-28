@@ -69,15 +69,15 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region2001_noDC_HD_2019-08-20.csv"  #output filename
+ofname <- "region2001_noDC_HD_2019-10-28.csv"  #output filename
   
   
 #unzip if needed
 #unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data") 
 
 #read required files
-munis <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #map of municipality IDs to be simulated
-LC <- raster("Data/LandCover2001_PastureB_Disagg.asc")  #land cover from LandCoverMap.r (or ClassifyDisaggregateMap.r)
+munis <- raster("Data/sim10_BRmunis_latlon_5km.asc") #map of municipality IDs to be simulated
+LC <- raster("Data/ObservedLCmaps/LandCover2001_PastureB_Disagg.asc")  #land cover from LandCoverMap.r (or ClassifyDisaggregateMap.r)
 Lpr <- raster('Data/LandPrice2001_Capital_nat1.asc')  #land prices from LandPriceMap.r
 
 mois <- raster('Data/Moisture/MoistureCap_OctNovDecJanFebMar_S_2001.asc')   #moisture capital from moistureMap.r 
@@ -117,11 +117,10 @@ Lprotect.xy <- readMapXYZ(Lprotect)
 OAslope.xy <- readMapXYZ(OAslope) 
 
 #create a list of unique municipality id values
-munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
-u.mids <- unique(munis.r)  
+u.mids <- unique(munis)  
 
 
-#joins (because Infrastructure, Moisture, Land Price maps are not perfectly aligned with munis.r)
+#joins (because Infrastructure, Moisture, Land Price maps are not perfectly aligned with munis)
 #four service land protections use the same initial conditions
 join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   dplyr::select(-V1.y) %>%

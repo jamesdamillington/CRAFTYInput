@@ -4,7 +4,7 @@
 rm(list=ls())
 library(raster)
 
-sim_yrs <- seq(2001, 2015, 1)   #single LC made for all these years
+sim_yrs <- seq(2001, 2018, 1)   #single LC made for all these years
 
 #1 = Nature
 #2 = Other Agri
@@ -30,7 +30,7 @@ for(i in seq_along(sim_yrs)){
 
   ObsLU <- raster(paste0("Data/ObservedLCmaps/LandCover",sim_yrs[i],"_PastureB_Disagg.asc"))
 
-  maskmap <- raster(paste0("Data/ObservedLCmaps/sim10_BRmunis_latlon_5km_2018-04-27.asc"))
+  maskmap <- raster(paste0("Data/ObservedLCmaps/sim10_BRmunis_latlon_5km.asc"))
   
   LU <- mask(ObsLU, maskmap)
   

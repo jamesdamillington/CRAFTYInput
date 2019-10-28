@@ -10,7 +10,7 @@ library(ncdf4)
 
 #read munis.r as latlong
 #unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
-munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+munis.r <- raster("Data/sim10_BRmunis_latlon_5km.asc")
 latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 crs(munis.r) <- latlong
 
@@ -192,9 +192,9 @@ y_fromYear <- function(year)
 #function to set climate file name (for use in nc2raster) from a year integer and variable (pre, tmn, tmx)
 fn_fromYearVar <- function(year, var)
 {
-  yr = "Data/cruts/cru_ts4.01.1991.2000."
-  if(year > 2000 & year <= 2010) { yr = "Data/cruts/cru_ts4.01.2001.2010."}
-  if(year > 2010 & year <= 2016) { yr = "Data/cruts/cru_ts4.01.2011.2016."}
+  yr = "Data/cruts/cru_ts4.03.1991.2000."
+  if(year > 2000 & year <= 2010) { yr = "Data/cruts/cru_ts4.03.2001.2010."}
+  if(year > 2010 & year <= 2018) { yr = "Data/cruts/cru_ts4.03.2011.2018."}
   
   return(paste0(yr,var,".dat.nc"))
 }
@@ -486,13 +486,8 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS)
   
   if(!GS){
     
-    writeRaster(avDi[["index_1"]], paste0(outputDir,"/",className,"/MeanDI_",season_label,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
     writeRaster(MoistureCap, paste0(outputDir,"/",className,"/MoistureCap_",season_label,"_",hemi,"_",year,".asc"), format = 'ascii', overwrite=T)
   
-    pdf(paste0(outputDir,"/",className,"/meanDI_",season_label,"_",year,hemi,".pdf"))
-    plot(avDi[["index_1"]], ext = BRA.e, main=paste("meanDI",season_label,year,hemi, sep=" "))  #need to use "index_1" to get to months labelled 1 in season_indices
-    dev.off()
-      
     pdf(paste0(outputDir,"/",className,"/MoistureCap_",season_label,"_",year,hemi,".pdf"))
     plot(MoistureCap, ext = BRA.e, main=paste("MoistureCap",season_label,year,hemi, sep=" "))  #need to use "index_1" to get to months labelled 1 in season_indices
     dev.off()
@@ -520,11 +515,11 @@ if(!dir.exists(paste0(outputDir,"/",className))) { dir.create(paste0(outputDir,"
 
 
 #yr <-2000
-for(yr in 2001:2015)
+for(yr in 2001:2018)
 {
   writeClimRast <- F
   writeClimPdf <- F
-  calcMoistureMaps(munis.r, PAW, yr, BRA.ext, "S", mz2_season, GS = T)
+  calcMoistureMaps(munis.r, PAW, yr, BRA.ext, "S", mz1_season, GS = F)
   print(paste0(yr," done"))
 }
 
