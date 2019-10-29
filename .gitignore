@@ -4,10 +4,11 @@
 .Ruserdata
 .ini
 desktop.ini
-/Data/
+#/Data/
 *.pdf
 agricultureMap.r
 agricultureMap_future.r
 agricultureMapMod.r
-create_null_CRAFTY_region.csv.r
+create_null_CRAFTY_regionCSV.r
 LandCoverMap_classify.r
+LandCoverMap.r

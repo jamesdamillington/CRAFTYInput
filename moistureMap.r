@@ -9,7 +9,7 @@ library(ncdf4)
 
 
 #read munis.r as latlong
-#unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
+#unzip(zipfile="Data/sim10_BRmunis_latlon_5km.zip",exdir="Data")  #unzip
 munis.r <- raster("Data/sim10_BRmunis_latlon_5km.asc")
 latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 crs(munis.r) <- latlong
