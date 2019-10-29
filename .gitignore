@@ -4,7 +4,7 @@
 .Ruserdata
 .ini
 desktop.ini
-#/Data/
+/Data/
 *.pdf
 agricultureMap.r
 agricultureMap_future.r
