@@ -7,8 +7,8 @@ library(raster)
 
 #note decliv_class.asc in zip file is 1.8GB!
 #read munis.r as latlong
-#unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
-munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+#unzip(zipfile="Data/sim10_BRmunis_latlon_5kmzip",exdir="Data")  #unzip
+munis.r <- raster("Data/sim10_BRmunis_latlon_5km.asc")
 latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 crs(munis.r) <- latlong
 
@@ -43,6 +43,6 @@ writeRaster(OAslope.m, "Data/OAgri-slope_2018-08-16", "ascii", "overwrite"=T)
 
 
 unlink("Data/decliv_class.asc")  #large file so delete! 
-#unlink("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+#unlink("Data/sim10_BRmunis_latlon_5km.asc")
 
 

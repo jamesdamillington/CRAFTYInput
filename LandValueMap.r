@@ -10,11 +10,9 @@ library(sf)
 #unzip and read files
 unzip(zipfile="Data/LandPrice.zip",exdir="Data/LandPrice")  #unzip
 
-unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
-munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
-
 Landprice<- st_read("Data/LandPrice/Native_vegetation.shp")
 lc2001 <- raster("Data/ObservedLCmaps/brazillc_2001_PastureB.asc")
+munis.r <- raster("Data/sim10_BRmunis_latlon_5km.asc")
 
 #rasterise year 2001
 Lp2001<- Landprice[,-(4:19)]
@@ -33,6 +31,5 @@ writeRaster(Lpr, "Data/LandPrice2001.asc", format = 'ascii', overwrite=T)
 writeRaster(Lpr.scaled, "Data/LandPrice2001_Capital_nat1.asc", format = 'ascii', overwrite=T)
 
 #remove unzipped files
-unlink("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 unlink("Data/LandPrice", recursive = T)
 

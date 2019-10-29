@@ -1,12 +1,11 @@
-#script resamples original soil texture data and converts to values neeed for agricultureMap.r (etc)
-#(code here moved from agriculturesetting.r 2018-07-04) 
+#script resamples original soil texture data and converts to values neeed for moistureMap.r (etc)
 
 rm(list=ls())
 library(raster)
 
 #read munis.r as latlong
-unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
-munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+unzip(zipfile="Data/sim10_BRmunis_latlon_5km.zip",exdir="Data")  #unzip
+munis.r <- raster("Data/sim10_BRmunis_latlon_5km.asc")
 latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 crs(munis.r) <- latlong
 
@@ -32,4 +31,4 @@ values(vsoil.m)[values(vsoil.m)==5] = 0.1
 writeRaster(vsoil.m, "Data/vsoil_2018-05-08", "ascii", "overwrite"=T) 
 
 unlink("Data/textura_wgs84.asc")  #large file so delete! 
-unlink("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+unlink("Data/sim10_BRmunis_latlon_5km.asc")

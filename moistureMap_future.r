@@ -1,4 +1,4 @@
-#script to create moisture capital map (previously agriculture capital)
+#script to create moisture capital map 
 
 #requires climate data from cru_ts4.zip (via https://crudata.uea.ac.uk/cru/data/hrg/)
 
@@ -10,7 +10,7 @@ library(ncdf4)
 
 #read munis.r as latlong
 #unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
-munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+munis.r <- raster("Data/sim10_BRmunis_latlon_5km.asc")
 latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 crs(munis.r) <- latlong
 
@@ -494,13 +494,8 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
   
   if(!GS){
     
-    writeRaster(avDi[["index_1"]], paste0(outputDir,"/",className,"/MeanDI_",season_label,"_","rcp",RCP,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
     writeRaster(MoistureCap, paste0(outputDir,"/",className,"/MoistureCap_",season_label,"_",hemi,"_rcp",RCP,"_",year,".asc"), format = 'ascii', overwrite=T)
-  
-    pdf(paste0(outputDir,"/",className,"/meanDI_",season_label,"_","rcp",RCP,"_",year,hemi,".pdf"))
-    plot(avDi[["index_1"]], ext = BRA.e, main=paste("meanDI",season_label,"rcp",RCP,"_",year,hemi, sep=" "))  #need to use "index_1" to get to months labelled 1 in season_indices
-    dev.off()
-      
+
     pdf(paste0(outputDir,"/",className,"/MoistureCap_",season_label,"_","rcp",RCP,"_",year,hemi,".pdf"))
     plot(MoistureCap, ext = BRA.e, main=paste("MoistureCap",season_label,"rcp",RCP,"_",year,hemi, sep=" "))  #need to use "index_1" to get to months labelled 1 in season_indices
     dev.off()

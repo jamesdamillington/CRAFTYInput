@@ -1,4 +1,4 @@
-#script to create moisture capital map (previously agriculture capital)
+#script to create moisture capital map
 
 #requires climate data from cru_ts4.zip (via https://crudata.uea.ac.uk/cru/data/hrg/)
 

@@ -1,12 +1,11 @@
-#script resamples original slope data and converts to values neeed for agricultureMap.r (etc)
-#(code here moved from create_CRAFTY_regionCSV2.0_JM_2018-04-27.r 2018-07-04) 
+#script resamples original slope data and converts to values neeed for moistureMap.r (etc)
 
 rm(list=ls())
 library(raster)
 
 #read munis.r as latlong
-unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip
-munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #spatial resolution is 5000m
+unzip(zipfile="Data/sim10_BRmunis_latlon_5km.zip",exdir="Data")  #unzip
+munis.r <- raster("Data/sim10_BRmunis_latlon_5km.asc") #spatial resolution is 5000m
 latlong <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 crs(munis.r) <- latlong
 
@@ -46,4 +45,4 @@ writeRaster(vslope.m, "Data/vslope_unclassified_2019-06-07", "ascii", "overwrite
 
 
 unlink("Data/decliv_class.asc")  #large file so delete! 
-unlink("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc")
+unlink("Data/sim10_BRmunis_latlon_5km.asc")

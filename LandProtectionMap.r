@@ -7,8 +7,8 @@ library(raster)
 library(sf)
 
 
-#unzip(zipfile="Data/sim10_BRmunis_latlon_5km_2018-04-27.zip",exdir="Data")  #unzip if needed
-munis.r <- raster("Data/sim10_BRmunis_latlon_5km_2018-04-27.asc") #for rasterization
+#unzip(zipfile="Data/sim10_BRmunis_latlon_5kmzip",exdir="Data")  #unzip if needed
+munis.r <- raster("Data/sim10_BRmunis_latlon_5km.asc") #for rasterization
 
 #LandProtect is for all services
 LandProtect<- st_read("Data/landProtection/protected_areas_clip.shp")
