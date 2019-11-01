@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region2001_noDC_HD_2019-10-28.csv"  #output filename
+ofname <- "region2001_noDC_HD_2019-11-01.csv"  #output filename
   
   
 #unzip if needed
@@ -91,6 +91,12 @@ OAslope <- raster('Data/OAgri-slope_2018-08-16.asc')  #other agriculture cap set
 OAslope <- round(OAslope, 1)  #round because of long dp
  
 agriHarvest <- read_csv("Data/muni2001_harvestAreas.csv", col_types = ("iiiid")) #from DoubleCropping.rmd
+
+
+#specify csv containing spatially uniform capital values (as used in createUpdateFiles.r)
+uniform_caps <- read_csv("Data/UniformCapitals_const.csv")
+unis <- uniform_caps %>% 
+  filter(Year == 2001)   #select the uniform capital values for start year (edit if starting from a different year)
 
 
 #if we want to see input maps
@@ -229,8 +235,8 @@ region.xy <- join.xy %>%
   rename(Y = row, X = col) %>%
   mutate(agentid = row_number()) %>%  #add dummy agent_ID
   mutate(BT = "Cognitor") %>%
-  mutate(Human = 0.264) %>%
-  mutate(Development = 0.233) %>%
+  mutate(Human = unis$Human) %>%
+  mutate(Development = unis$Development) %>%
   mutate(Economic = 1.0) %>%
   mutate(Other = if_else(FR == "FR7", 1.0,0)) %>%                #if Other LC set Capital to 1
   mutate(Climate = Moisture) %>%
