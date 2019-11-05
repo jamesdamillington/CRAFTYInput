@@ -58,7 +58,7 @@ readMapXYZ <- function(mapz)
   #map <- raster(path)     #read raster
   map <-flip(mapz, 'y')    #flip maps as CRAFTY read values from the bottom of the map
   map <- extractXYZ(map)  #convert from map to xyz (as tibble)
-  return(as.tibble(map))  #return xyz as tibble
+  return(as_tibble(map))  #return xyz as tibble
 }
 ######
 
@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region2001_noDC_HD_2019-11-01.csv"  #output filename
+ofname <- "region2001_noDC_HD_2019-11-05.csv"  #output filename
   
   
 #unzip if needed
@@ -87,14 +87,17 @@ infra <- raster('Data/PortAccessCapital/PortAccessCap2000.asc') #infrastrucutre 
 Lprotect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
 
 OAslope <- raster('Data/OAgri-slope_2018-08-16.asc')  #other agriculture cap set to slope 
-
 OAslope <- round(OAslope, 1)  #round because of long dp
+
+NatAccess <- raster('Data/NatureAccess_2001_PastureB_Disagg.asc') 
+AgriInfra <- raster('Data/AgriAccess_2001_PastureB_Disagg.asc') 
+OAgriInfra <- raster('Data/OAgriAccess_2001_PastureB_Disagg.asc') 
  
 agriHarvest <- read_csv("Data/muni2001_harvestAreas.csv", col_types = ("iiiid")) #from DoubleCropping.rmd
 
 
 #specify csv containing spatially uniform capital values (as used in createUpdateFiles.r)
-uniform_caps <- read_csv("Data/UniformCapitals_const.csv")
+uniform_caps <- read_csv("Data/UniformCapitals.csv")
 unis <- uniform_caps %>% 
   filter(Year == 2001)   #select the uniform capital values for start year (edit if starting from a different year)
 
@@ -121,6 +124,9 @@ GS.xy <- readMapXYZ(GS)
 infra.xy <- readMapXYZ(infra) 
 Lprotect.xy <- readMapXYZ(Lprotect) 
 OAslope.xy <- readMapXYZ(OAslope) 
+NatAccess.xy <- readMapXYZ(NatAccess) 
+AgriInfra.xy <- readMapXYZ(AgriInfra) 
+OAgriInfra.xy <- readMapXYZ(OAgriInfra) 
 
 #create a list of unique municipality id values
 u.mids <- unique(munis)  
@@ -155,6 +161,15 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   left_join(., OAslope.xy, by = c("row", "col")) %>%
   dplyr::select(-V1) %>%
   rename("Other Agriculture" = vals) %>% 
+  left_join(., NatAccess.xy, by = c("row", "col")) %>%
+  dplyr::select(-V1) %>%
+  rename("Nature Access" = vals) %>% 
+  left_join(., AgriInfra.xy, by = c("row", "col")) %>%
+  dplyr::select(-V1) %>%
+  rename("Agri Infrastructure" = vals) %>% 
+  left_join(., OAgriInfra.xy, by = c("row", "col")) %>%
+  dplyr::select(-V1) %>%
+  rename("OAgri Infrastructure" = vals) %>% 
   filter_all(all_vars(!is.na(.)))      #filter any rows missing data NA values
 
 #join.xy <- join.xy %>%
@@ -214,20 +229,20 @@ join.xy <- join.xy %>%
     )))
 
 #add accessibility (NB note typo) (but this is calculated dynamically within CRAFY code)
-join.xy <- join.xy %>%
+#join.xy <- join.xy %>%
 #  mutate(`Nature Access` = if_else(FR == "FR5",
 #    sample(1:20,n(),replace=T)/100,
 #    sample(90:100,n(),replace=T)/100
 #    ))
-    mutate(`Nature Access` = if_else(FR == "FR5", 0, 1))
+#    mutate(`Nature Access` = if_else(FR == "FR5", 0, 1))
 
 
-join.xy <- join.xy %>%
-  mutate(`Agri Infrastructure` = if_else(FR == "FR1" | FR == "FR2" | FR == "FR3", 1, 0))
+#join.xy <- join.xy %>%
+#  mutate(`Agri Infrastructure` = if_else(FR == "FR1" | FR == "FR2" | FR == "FR3", 1, 0.5))
 
 
-join.xy <- join.xy %>%
-  mutate(`OAgri Infrastructure` = if_else(FR == "FR6", 1, 0))
+#join.xy <- join.xy %>%
+#  mutate(`OAgri Infrastructure` = if_else(FR == "FR6", 1, 0.5))
 
 
 #add columns that are either uniform or simple row number
@@ -238,7 +253,7 @@ region.xy <- join.xy %>%
   mutate(Human = unis$Human) %>%
   mutate(Development = unis$Development) %>%
   mutate(Economic = 1.0) %>%
-  mutate(Other = if_else(FR == "FR7", 1.0,0)) %>%                #if Other LC set Capital to 1
+  mutate(Other = if_else(FR == "FR7", 1,0)) %>%                #if Other LC set Capital to 1
   mutate(Climate = Moisture) %>%
   mutate(`Port Access` = round(`Port Access`, 3))  #added to prevent many dps (unknown why)
 
