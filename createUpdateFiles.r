@@ -6,13 +6,13 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "testing_2019-10-28"
+scenario <- "testing_2019-11-05b"
 
 update_yrs <- seq(2002, 2018, 1)
 
 #specify csv containing spatially uniform capital values
 #each row is a year, each column is Capital 
-uniform_caps <- read_csv("Data/UniformCapitals_const.csv")
+uniform_caps <- read_csv("Data/UniformCapitals.csv")
 
 #specify capital map filename patterns  (assumes all map files end 'YEAR.asc')
 mois <- "MoistureCap_OctNovDecJanFebMar_S_"
@@ -24,7 +24,7 @@ Pas_LP <- "Pasture_ProtectionMap_"
 GrowSeason <- "GSCap_JanFebMarAprMayJun_S_"
 
 #need to use region file to identify required XY cells for this simulation
-region <- read_csv("Data/region2001_noDC_HD_2019-10-28.csv",
+region <- read_csv("Data/region2001_noDC_HD_2019-11-01e.csv",
   col_types = cols(`Land Price` = col_double(),
     `Growing Season` = col_double(),
     Other  = col_double(),
@@ -76,7 +76,7 @@ readMapXYZ <- function(mapz)
   map <-flip(mapz, 'y')    #flip maps as CRAFTY read values from the bottom of the map
   map <- extractXYZ(map)  #convert from map to xyz (as tibble)
   map <- round(map, 3)
-  return(as.tibble(map))  #return xyz as tibble
+  return(as_tibble(map))  #return xyz as tibble
 }
 
 
