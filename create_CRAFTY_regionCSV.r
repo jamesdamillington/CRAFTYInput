@@ -69,7 +69,7 @@ readMapXYZ <- function(mapz)
 #4 = Other
 #5 = Pasture
 
-ofname <- "region2001_noDC_HD_2019-11-05.csv"  #output filename
+ofname <- "region2001_noDC_HD_2019-11-19h.csv"  #output filename
   
   
 #unzip if needed
@@ -90,11 +90,12 @@ OAslope <- raster('Data/OAgri-slope_2018-08-16.asc')  #other agriculture cap set
 OAslope <- round(OAslope, 1)  #round because of long dp
 
 NatAccess <- raster('Data/NatureAccess_2001_PastureB_Disagg.asc') 
-AgriInfra <- raster('Data/AgriAccess_2001_PastureB_Disagg.asc') 
-OAgriInfra <- raster('Data/OAgriAccess_2001_PastureB_Disagg.asc') 
+AgriAccess <- raster('Data/AgriAccess_2001_PastureB_Disagg.asc') 
+OAgriAccess <- raster('Data/OAgriAccess_2001_PastureB_Disagg.asc') 
  
 agriHarvest <- read_csv("Data/muni2001_harvestAreas.csv", col_types = ("iiiid")) #from DoubleCropping.rmd
 
+human <- raster('Data/HumanDev/HumanCapital2001.asc') 
 
 #specify csv containing spatially uniform capital values (as used in createUpdateFiles.r)
 uniform_caps <- read_csv("Data/UniformCapitals.csv")
@@ -125,8 +126,9 @@ infra.xy <- readMapXYZ(infra)
 Lprotect.xy <- readMapXYZ(Lprotect) 
 OAslope.xy <- readMapXYZ(OAslope) 
 NatAccess.xy <- readMapXYZ(NatAccess) 
-AgriInfra.xy <- readMapXYZ(AgriInfra) 
-OAgriInfra.xy <- readMapXYZ(OAgriInfra) 
+AgriAccess.xy <- readMapXYZ(AgriAccess) 
+OAgriAccess.xy <- readMapXYZ(OAgriAccess) 
+human.xy <- readMapXYZ(human) 
 
 #create a list of unique municipality id values
 u.mids <- unique(munis)  
@@ -164,30 +166,16 @@ join.xy <- left_join(munis.xy, infra.xy, by = c("row", "col")) %>%
   left_join(., NatAccess.xy, by = c("row", "col")) %>%
   dplyr::select(-V1) %>%
   rename("Nature Access" = vals) %>% 
-  left_join(., AgriInfra.xy, by = c("row", "col")) %>%
+  left_join(., AgriAccess.xy, by = c("row", "col")) %>%
   dplyr::select(-V1) %>%
   rename("Agri Infrastructure" = vals) %>% 
-  left_join(., OAgriInfra.xy, by = c("row", "col")) %>%
+  left_join(., OAgriAccess.xy, by = c("row", "col")) %>%
   dplyr::select(-V1) %>%
   rename("OAgri Infrastructure" = vals) %>% 
+  left_join(., human.xy, by = c("row", "col")) %>%
+  dplyr::select(-V1) %>%
+  rename("Human" = vals) %>% 
   filter_all(all_vars(!is.na(.)))      #filter any rows missing data NA values
-
-#join.xy <- join.xy %>%
-#  mutate(`Growing Season` = 0)
-
-
-
-#DoubleCropping (used for other variables below, but ultimately removed?)
-#state <-read_csv("Data/Municipality_area_and_IBGE_code_number.csv")
-#Fstate_vals <- c(17,	29,	31,	35,	41,	42,	43,	50,	51,	52)
-
-#DCstates <- c(50,51,41,52,31,35)  #specify which states double cropping is possible in
-#DC <- inner_join(join.xy, state, by = c("muniID" = "CD_GCMUN")) %>%
-#  select(row, col, CD_GCUF) %>%
-#  mutate("Growing Season" = if_else(CD_GCUF %in% DCstates,  1, 0))  #1 if stateID is in list otherwise 0
-      
-#join.xy <- left_join(join.xy, DC, by = c("row","col")) %>%
-#  select(-CD_GCUF)
 
 
 #add harvest areas and LC to the table then use to create FR column (see below for logic)
@@ -203,8 +191,6 @@ join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
     if_else(LC == 1, "FR5",          #Nature        
     if_else(LC == 2, "FR6",           #Other Agri      
     if_else(LC == 3,                 #Agri
-      #if_else(`Growing Season` > 0, "FR3",         #if double cropping possible, always assign
-        #if_else(rbinom(n(),1,0.5) == 1,"FR1","FR2")),   #if double cropping not possible, randomly assign soy or maize (or should weight by muncipality data on production??) see https://stackoverflow.com/a/31878476 for n()
       if_else(!is.na(maize_prop),
         if_else(rand <= maize_prop, "FR2", "FR1"),   #maize_prop calculated in DoubleCropping.rmd
           if_else(rand < 0.5, "FR2", "FR1")),  #because there are some munis mapped that for some reason are not in the IBGE data...
@@ -212,11 +198,11 @@ join.xy <- left_join(join.xy, LC.xy, by = c("row","col")) %>%
     ))))
 
 
-#FR1 = Soy (LC3 where based on proportion of area harvested)
-#FR2 = Maize (LC3 where based on proportion of area harvested)
-#FR3 = Double Crop do not include in 2001
+#FR1 = Soy 
+#FR2 = Maize
+#FR3 = Double Crop 
 #FR4 = Nature (LC1) [does not exist at model initialisation]
-#FR5 = Stubborn Nature (LC1)
+#FR5 = Nature (LC1)
 #FR6 = Other Agri (LC2)
 #FR7 = Other (LC4)
 #FR8 = Pasture (LC5) 
@@ -228,29 +214,13 @@ join.xy <- join.xy %>%
     if_else(FR == "FR7", 0, 0.3)                  #other = 0.0, non-pasture agri uses = 0.3
     )))
 
-#add accessibility (NB note typo) (but this is calculated dynamically within CRAFY code)
-#join.xy <- join.xy %>%
-#  mutate(`Nature Access` = if_else(FR == "FR5",
-#    sample(1:20,n(),replace=T)/100,
-#    sample(90:100,n(),replace=T)/100
-#    ))
-#    mutate(`Nature Access` = if_else(FR == "FR5", 0, 1))
-
-
-#join.xy <- join.xy %>%
-#  mutate(`Agri Infrastructure` = if_else(FR == "FR1" | FR == "FR2" | FR == "FR3", 1, 0.5))
-
-
-#join.xy <- join.xy %>%
-#  mutate(`OAgri Infrastructure` = if_else(FR == "FR6", 1, 0.5))
-
 
 #add columns that are either uniform or simple row number
 region.xy <- join.xy %>%
   rename(Y = row, X = col) %>%
   mutate(agentid = row_number()) %>%  #add dummy agent_ID
   mutate(BT = "Cognitor") %>%
-  mutate(Human = unis$Human) %>%
+  #mutate(Human = unis$Human) %>%
   mutate(Development = unis$Development) %>%
   mutate(Economic = 1.0) %>%
   mutate(Other = if_else(FR == "FR7", 1,0)) %>%                #if Other LC set Capital to 1
