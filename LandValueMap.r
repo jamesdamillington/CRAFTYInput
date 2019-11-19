@@ -6,29 +6,28 @@ rm(list=ls())
 library(raster)
 library(sf)
 
+year <- 2016
 
 #unzip and read files
 unzip(zipfile="Data/LandPrice.zip",exdir="Data/LandPrice")  #unzip
 
 Landprice<- st_read("Data/LandPrice/Native_vegetation.shp")
-lc2001 <- raster("Data/ObservedLCmaps/brazillc_2001_PastureB.asc")
+lcMap <- raster(paste0("Data/ObservedLCmaps/LandCover",year,"_PastureB_Disagg.asc"))
 munis.r <- raster("Data/sim10_BRmunis_latlon_5km.asc")
 
-#rasterise year 2001
-Lp2001<- Landprice[,-(4:19)]
-Lp2001<- Lp2001[,-(1:2)]
-Lpr<-rasterize(Lp2001, munis.r, field='X2001')  
+#rasterise year 
+Lpr<-rasterize(Landprice, munis.r, field=paste0("X",year))
 
 #re-scale to 0-1 for Capital
 Lpr.scaled <- Lpr
 values(Lpr.scaled)= round((1500-(values(Lpr)))/1500, digits=3)
 
 #where land cover is not nature, price should be 1 
-Lpr.scaled[lc2001 != 1] <- 1
+Lpr.scaled[lcMap != 1] <- 1
 
 #output data
-writeRaster(Lpr, "Data/LandPrice2001.asc", format = 'ascii', overwrite=T)
-writeRaster(Lpr.scaled, "Data/LandPrice2001_Capital_nat1.asc", format = 'ascii', overwrite=T)
+writeRaster(Lpr, paste0("Data/LandPrice",year,".asc"), format = 'ascii', overwrite=T)
+writeRaster(Lpr.scaled, paste0("Data/LandPrice",year,"_Capital_nat1.asc"), format = 'ascii', overwrite=T)
 
 #remove unzipped files
 unlink("Data/LandPrice", recursive = T)
