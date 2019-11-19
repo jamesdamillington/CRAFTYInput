@@ -6,7 +6,7 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "testing_2019-11-05b"
+scenario <- "testing_2019-11-19h"
 
 update_yrs <- seq(2002, 2018, 1)
 
@@ -14,17 +14,8 @@ update_yrs <- seq(2002, 2018, 1)
 #each row is a year, each column is Capital 
 uniform_caps <- read_csv("Data/UniformCapitals.csv")
 
-#specify capital map filename patterns  (assumes all map files end 'YEAR.asc')
-mois <- "MoistureCap_OctNovDecJanFebMar_S_"
-PortAccess <- "PortAccessCap"
-Oagri <- "singleLC_OtherAgri_"
-other <- "singleLC_Other_"
-Soy_LP <- "Soy_ProtectionMap_"
-Pas_LP <- "Pasture_ProtectionMap_"
-GrowSeason <- "GSCap_JanFebMarAprMayJun_S_"
-
 #need to use region file to identify required XY cells for this simulation
-region <- read_csv("Data/region2001_noDC_HD_2019-11-01e.csv",
+region <- read_csv("Data/region2001_noDC_HD_2019-11-19h.csv",
   col_types = cols(`Land Price` = col_double(),
     `Growing Season` = col_double(),
     Other  = col_double(),
@@ -38,14 +29,24 @@ region <- read_csv("Data/region2001_noDC_HD_2019-11-01e.csv",
   ) #needed to read correct type
 
 
+#specify capital map filename patterns  (assumes all map files end 'YEAR.asc')
+mois <- "MoistureCap_OctNovDecJanFebMar_S_"
+PortAccess <- "PortAccessCap"
+Oagri <- "singleLC_OtherAgri_"
+other <- "singleLC_Other_"
+Soy_LP <- "Soy_ProtectionMap_"
+Pas_LP <- "Pasture_ProtectionMap_"
+GrowSeason <- "GSCap_JanFebMarAprMayJun_S_"
+human <- "HumanCapital"
+
 #create list of capital maps to work through
 #map_caps <- list(agri, infra, Oagri, other)
-map_caps <- list(mois, PortAccess, other, Soy_LP, Pas_LP, GrowSeason)
+map_caps <- list(mois, PortAccess, other, Soy_LP, Pas_LP, GrowSeason, human)
 #map_caps <- list(PortAccess, other, Soy_LP, Pas_LP)
   
 #labels that need to be use for capitals in the final output file
 #map_caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
-map_caps_labs <- list("Moisture", "Port Access", "Other", "Soy Protection", "Pasture Protection", "Growing Season")
+map_caps_labs <- list("Moisture", "Port Access", "Other", "Soy Protection", "Pasture Protection", "Growing Season", "Human")
 #map_caps_labs <- list("Port Access", "Other", "Soy Protection", "Pasture Protection")
   
 #FUNCTIONS
