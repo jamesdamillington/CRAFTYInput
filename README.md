@@ -1,5 +1,5 @@
 # CRAFTYInput
-Scripts to create input files for CRAFTY-Brazil. See also [BrazilInputMaps](https://github.com/jamesdamillington/BrazilInputMaps) for scripts that create the base land cover map. 
+Scripts to create input files for the [CRAFTY Brazil](https://github.com/jamesdamillington/CRAFTY_Brazil) ABM simulation model. See also [BrazilInputMaps](https://github.com/jamesdamillington/BrazilInputMaps) for scripts that create the base land cover map. 
 
 There are two primary types of input file:
 - [The region.csv file](#the-region.csv-file) used to initialise a model run
