@@ -265,9 +265,11 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
   
   tmn.b <- projectRaster(tmn, munis.r)
   tmn.b <- mask(x=tmn.b, mask=munis.r)
+  tmn.b <- tmn.b - 272.15  #convert to degC
   
   tmx.b <- projectRaster(tmx, munis.r)
   tmx.b <- mask(x=tmx.b, mask=munis.r)
+  tmx.b <- tmx.b - 272.15  #convert to degC
   
   #caclulate average temperature by month (brick)
   avtemp.b <- 0.36*(3*tmx.b-tmn.b)
@@ -275,11 +277,23 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
   #annual temp raster layer
   Ta<-mean(avtemp.b)
   
+  #set params needed to calculate P and PET
+  Days <- list(31,28,31,30,31,30,31,31,30,31,30,31) #list of days in the month 
+  if(hemi == "S") {
+    Days <- list(31,31,30,31,30,31,31,28,31,30,31,30)
+  }
+  
+  #convert kg m-2 s-1 to mm/day
+  pre.b <- pre.b * 86400 #s in day
+  monthProd <- function(P, D) { return(P * D) }  #multiply by the number of days in the month
+  pre.b <- 
+    map2(as.list(pre.b), Days, monthProd) %>% 
+    stack()  #remember to re-stack the list after function
+
+  
   #total pptn raster layer
   Pa<-sum(pre.b)
   
-  #set params needed to calculate PET
-  Days <- list(31,28,31,30,31,30,31,31,30,31,30,31) #list of days in the month 
   Idex <- 12*((0.2*Ta)^1.514)#1st regional thermal index
   Adex <- 0.49239+1.7912*10^-2*Idex-7.71*10^-5*Idex^2+6.75*10^-7*Idex^3#2nd regional thermal index
   Ndex <- 12##NEED REAL VALUE
@@ -331,7 +345,7 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
   ET <- nullRaster #empty layer for temp useage in loop
   
   #par(mfrow=c(1,1))
-  
+
   #see loopProofs (need to use loop, cannot use map)
   for(i in 1:12)
   {
@@ -478,7 +492,7 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
   }
   
   #create the Moisture Capital Map
-  MoistureCap <- (75 - avDi[["index_1"]]) / 75
+  MoistureCap <- round(((75 - avDi[["index_1"]]) / 75),3)
   MoistureCap[MoistureCap[]<0]<-0
   
 
@@ -529,7 +543,7 @@ if(!dir.exists(paste0(outputDir,"/",className))) { dir.create(paste0(outputDir,"
 #loop over rcps
 for(x in c(45, 85)){
   #loop over years
-  for(y in 2016:2030)
+  for(y in 2019:2021)
   {
     for(z in c(TRUE,FALSE))
     {
@@ -537,8 +551,8 @@ for(x in c(45, 85)){
       print(GS)
       season = mz1_season
       if(GS) { season = mz2_season }  #if Growing Season cap season should be Jan-Jun
-      writeClimRast <- T
-      writeClimPdf <- T
+      writeClimRast <- F
+      writeClimPdf <- F
       calcMoistureMaps(munis.r, PAW, year=y, BRA.ext, hemi="S", season, GS, RCP=x)
       print(paste0("rcp", x, ", ", y," done"))
     }
