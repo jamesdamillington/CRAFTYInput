@@ -1,5 +1,5 @@
 # CRAFTYInput
-Scripts to create input files for the [CRAFTY Brazil](https://github.com/jamesdamillington/CRAFTY_Brazil) ABM simulation model. See also [BrazilInputMaps](https://github.com/jamesdamillington/BrazilInputMaps) for scripts that create the base land cover map. 
+Scripts to create input files for the [CRAFTY-Brazil](https://github.com/jamesdamillington/CRAFTY_Brazil) ABM simulation model. See also [CRAFTY-Brazil Input Maps](https://github.com/jamesdamillington/BrazilInputMaps) for scripts that create the base land cover map. 
 
 There are two primary types of input file:
 - [The region.csv file](#the-region.csv-file) used to initialise a model run
@@ -17,7 +17,7 @@ To create data to simulate the observed time period 2001-2018:
 - [PortAccessMap.r](PortAccessMap.r): resamples and rescales Transport Capital maps
 - [LandProtectionMap.r](LandProtectionMap.r): rasterizes shapefiles to create maps for Land Protection Capitals 
 - [LandValueMap.r](LandValueMap.r): rasterizes land price vector map and classifies for the Land Value Capital
-- [accessMap.r](accessMap.r): create Access Capital maps from Land Cover Maps [see CRAFTY-Brazil Input Maps](https://github.com/jamesdamillington/BrazilInputMaps))
+- [accessMap.r](accessMap.r): create Access Capital maps from land cover maps [see CRAFTY-Brazil Input Maps](https://github.com/jamesdamillington/BrazilInputMaps))
 
 Helper scripts for the scripts above:
 - [slopeMap.r](slopeMap.r): converts original high-res slope map to resolution for model and classifies this as a Capital. Used in [moistureMap.r](moistureMap.r)
