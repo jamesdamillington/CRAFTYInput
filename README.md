@@ -1,4 +1,5 @@
 # CRAFTYInput
+[![DOI](https://zenodo.org/badge/139715339.svg)](https://zenodo.org/badge/latestdoi/139715339)
 Scripts to create input files for the [CRAFTY-Brazil](https://github.com/jamesdamillington/CRAFTY_Brazil) ABM simulation model. See also [CRAFTY-Brazil Input Maps](https://github.com/jamesdamillington/BrazilInputMaps) for scripts that create the base land cover map. 
 
 There are two primary types of input file:
