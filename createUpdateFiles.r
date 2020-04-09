@@ -6,16 +6,16 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "testing_2019-11-19h"
+scenario <- "new2017_2020-02-10b"
 
-update_yrs <- seq(2002, 2018, 1)
+update_yrs <- seq(2017, 2017, 1)
 
 #specify csv containing spatially uniform capital values
 #each row is a year, each column is Capital 
-uniform_caps <- read_csv("Data/UniformCapitals.csv")
+uniform_caps <- read_csv("Data/UniformCapitals_2020-02-10b.csv")
 
 #need to use region file to identify required XY cells for this simulation
-region <- read_csv("Data/region2001_noDC_HD_2019-11-19h.csv",
+region <- read_csv("Data/region2001_2020-02-10b.csv",
   col_types = cols(`Land Price` = col_double(),
     `Growing Season` = col_double(),
     Other  = col_double(),
@@ -31,22 +31,25 @@ region <- read_csv("Data/region2001_noDC_HD_2019-11-19h.csv",
 
 #specify capital map filename patterns  (assumes all map files end 'YEAR.asc')
 mois <- "MoistureCap_OctNovDecJanFebMar_S_"
-PortAccess <- "PortAccessCap"
+PortAccess <- "PortAccessCap90k_"
 Oagri <- "singleLC_OtherAgri_"
 other <- "singleLC_Other_"
-Soy_LP <- "Soy_ProtectionMap_"
-Pas_LP <- "Pasture_ProtectionMap_"
+Soy_LP <- "Soy_ProtectionMap_025_"
+Pas_LP <- "Pasture_ProtectionMap_025_"
 GrowSeason <- "GSCap_JanFebMarAprMayJun_S_"
-human <- "HumanCapital"
+LandPrice <- "LandPrice_Capital_08_"
+#human <- "HumanCapital"
 
 #create list of capital maps to work through
-#map_caps <- list(agri, infra, Oagri, other)
-map_caps <- list(mois, PortAccess, other, Soy_LP, Pas_LP, GrowSeason, human)
+map_caps <- list(mois, GrowSeason,PortAccess,LandPrice)
+#map_caps <- list()
+#map_caps <- list(mois, PortAccess, other, Soy_LP, Pas_LP, GrowSeason, LandPrice)
 #map_caps <- list(PortAccess, other, Soy_LP, Pas_LP)
   
 #labels that need to be use for capitals in the final output file
-#map_caps_labs <- list("Agriculture", "Infrastructure", "Other Agriculture", "Other")
-map_caps_labs <- list("Moisture", "Port Access", "Other", "Soy Protection", "Pasture Protection", "Growing Season", "Human")
+map_caps_labs <- list("Moisture", "Growing Season","Port Access","LandPrice")
+#map_caps_labs <- list()
+#map_caps_labs <- list("Moisture", "Port Access", "Other", "Soy Protection", "Pasture Protection", "Growing Season", "LandPrice")
 #map_caps_labs <- list("Port Access", "Other", "Soy Protection", "Pasture Protection")
   
 #FUNCTIONS
@@ -138,7 +141,8 @@ for(i in seq_along(update_yrs)) {
   
   #drop un-necessary columns and replace Moisture NAs
   joined <- joined %>% 
-    dplyr::select(-muniID, -Year)
+    dplyr::select(-muniID, -Year)  
+    #dplyr::select(-muniID)
       
 
   write_csv(joined,paste0("Data/updates/",scenario,"_update",update_yrs[i],".csv"))

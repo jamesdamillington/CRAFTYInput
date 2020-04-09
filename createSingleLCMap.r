@@ -4,7 +4,8 @@
 rm(list=ls())
 library(raster)
 
-sim_yrs <- seq(2001, 2018, 1)   #single LC made for all these years
+#sim_yrs <- seq(2018, 2018, 1)   #single LC made for all these years
+sim_yrs <- c(2005, 2010)   #single LC made for all these years
 
 #1 = Nature
 #2 = Other Agri
@@ -13,10 +14,11 @@ sim_yrs <- seq(2001, 2018, 1)   #single LC made for all these years
 # = Pasture
 
 #what is desired output LC?
-target = 4
+target = 1  #change this so that this number is derived automaticall from the tname variables (using ifelse)
 
 #target name (for output file name), e.g. OtherAgri, Other 
-tname <- "Other"
+tname <- "Nature"
+
 
 #if binary true output a binary map where 1 = target LC and 0 is not
 #if binary false, output map where target LC value is maintained, all others set to 0
@@ -36,7 +38,7 @@ for(i in seq_along(sim_yrs)){
   
   LU <- subs(LU, df)
   
-  writeRaster(LU, paste0("Data/singleLC_",tname,"_",sim_yrs[i],".asc"), format = 'ascii', overwrite=T)
+  writeRaster(LU, paste0("Data/ObservedLCmaps/singleLC_",tname,"_",sim_yrs[i],"_PastureB_Disagg.asc"), format = 'ascii', overwrite=T)
   
 }
 
