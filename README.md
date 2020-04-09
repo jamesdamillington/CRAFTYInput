@@ -13,8 +13,13 @@ Create the region.csv file using [create_CRAFTY_regionCSV.r](create_CRAFTY_regio
 
 To create data to simulate the observed time period 2001-2018:
 
-- [moistureMap.r](moistureMap.r): creates an Moisture Captial map (both first and second seasons). Requires output from [slopeMap.r](slopeMap.r) and [soilMap.r](soilMap.r) (see below) and [cru_ts4 climate](https://crudata.uea.ac.uk/cru/data/hrg/) data (to calculate water balance)   
+- [moistureMap.r](moistureMap.r): creates Captial maps for either Moisture-Main or Moisture-Second (first and second seasons respectively). Requires output from [slopeMap.r](slopeMap.r) and [soilMap.r](soilMap.r) (see below) and [cru_ts4 climate](https://crudata.uea.ac.uk/cru/data/hrg/) data (to calculate water balance)   
+- [PortAccessMap.r](PortAccessMap.r): resamples and rescales Transport Capital maps
+- [LandProtectionMap.r](LandProtectionMap.r): rasterizes shapefiles to create maps for Land Protection Capitals 
 - [LandValueMap.r](LandValueMap.r): rasterizes land price vector map and classifies for the Land Value Capital
+- [accessMap.r](accessMap.r): create Access Capital maps from Land Cover Maps [see CRAFTY-Brazil Input Maps](https://github.com/jamesdamillington/BrazilInputMaps))
+
+Helper scripts for the scripts above:
 - [slopeMap.r](slopeMap.r): converts original high-res slope map to resolution for model and classifies this as a Capital. Used in [moistureMap.r](moistureMap.r)
 - [soilMap.r](soilMap.r): converts original low-res soil map to resolution for model and classifies as a Capital. Used in [moistureMap.r](moistureMap.r)
 

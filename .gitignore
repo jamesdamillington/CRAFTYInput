@@ -12,3 +12,6 @@ agricultureMapMod.r
 create_null_CRAFTY_regionCSV.r
 LandCoverMap_classify.r
 LandCoverMap.r
+EconomicMap.r
+humdevMap.r
+
