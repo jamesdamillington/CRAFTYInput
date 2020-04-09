@@ -414,7 +414,7 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
   
   
   #pptn and temp by season if needed
-  avPptn <- stackApply(pre.b, season_indices, mean)
+  sumPptn <- stackApply(pre.b, season_indices, sum)
   avTemp <- stackApply(avtemp.b, season_indices, mean)
   
   
@@ -438,7 +438,7 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
     writeRaster(avDEF[["index_1"]], paste0(outputDir,"/",className,"/MeanDEF_",season_label,"_","rcp",RCP,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
     writeRaster(avPET[["index_1"]], paste0(outputDir,"/",className,"/MeanPET_",season_label,"_","rcp",RCP,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
     writeRaster(avTemp[["index_1"]], paste0(outputDir,"/",className,"/MeanTemp_",season_label,"_","rcp",RCP,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
-    writeRaster(avPptn[["index_1"]], paste0(outputDir,"/",className,"/MeanPrecip_",season_label,"_","rcp",RCP,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
+    writeRaster(sumPptn[["index_1"]], paste0(outputDir,"/",className,"/SumPrecip_",season_label,"_","rcp",RCP,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
     writeRaster(avDi[["index_1"]], paste0(outputDir,"/",className,"/MeanDI_",season_label,"_","rcp",RCP,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
     writeRaster(DEFmonths[["index_1"]], paste0(outputDir,"/",className,"/CountDEFmonths_",season_label,"_","rcp",RCP,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
     writeRaster(DEFmonths_prop[["index_1"]], paste0(outputDir,"/",className,"/PropDEFmonths_",season_label,"_","rcp",RCP,"_",year,hemi,".asc"), format = 'ascii', overwrite=T)
@@ -460,10 +460,35 @@ calcMoistureMaps <- function(munis.r, PAW, year, BRA.e, hemi, season, GS, RCP)
     plot(ET.b, ext = BRA.e)
     dev.off()
 
-    pdf(paste0(outputDir,"/",className,"/PPTN_","rcp",RCP,"_",year,hemi,".pdf"))
+    pdf(paste0(outputDir,"/",className,"/PPTNmon_","rcp",RCP,"_",year,hemi,".pdf"))
     plot(pre.b, ext = BRA.e)
     dev.off()
-
+    
+    pdf(paste0(outputDir,"/",className,"/SumPrecip_",season_label,"_","rcp",RCP,"_",year,hemi,".pdf"))
+    plot(sumPptn[["index_1"]], ext = BRA.e)
+    dev.off()
+    
+    
+    #pptnname <- ""
+    #if(GS) { pptnname <- paste0(outputDir,"/",className,"/PPTN_GS","rcp",RCP,"_",year,hemi,".pdf") }
+    #if(!GS) { pptnname <- paste0(outputDir,"/",className,"/PPTN_Mois","rcp",RCP,"_",year,hemi,".pdf") }
+    
+    #pdf(pptnname)
+    #plot(sumPptn, ext = BRA.e)
+    #dev.off()
+    
+    pdf(paste0(outputDir,"/",className,"/MeanTemp_",season_label,"_","rcp",RCP,"_",year,hemi,".pdf"))
+    plot(avTemp[["index_1"]], ext = BRA.e)
+    dev.off()
+    
+    #tempname <- ""
+    #if(GS) { tempname <- paste0(outputDir,"/",className,"/TEMP_GS","rcp",RCP,"_",year,hemi,".pdf") }
+    #if(!GS) { tempname <- paste0(outputDir,"/",className,"/TEMP_Mois","rcp",RCP,"_",year,hemi,".pdf") }
+    
+    #pdf(tempname)
+    #plot(avTemp, ext = BRA.e)
+    #dev.off()
+    
     pdf(paste0(outputDir,"/",className,"/DI_","rcp",RCP,"_",year,hemi,".pdf"))
     plot(Di, ext = BRA.e)
     dev.off()
@@ -543,7 +568,7 @@ if(!dir.exists(paste0(outputDir,"/",className))) { dir.create(paste0(outputDir,"
 #loop over rcps
 for(x in c(45, 85)){
   #loop over years
-  for(y in 2019:2021)
+  for(y in 2033:2035)
   {
     for(z in c(TRUE,FALSE))
     {
@@ -552,7 +577,7 @@ for(x in c(45, 85)){
       season = mz1_season
       if(GS) { season = mz2_season }  #if Growing Season cap season should be Jan-Jun
       writeClimRast <- F
-      writeClimPdf <- F
+      writeClimPdf <- T
       calcMoistureMaps(munis.r, PAW, year=y, BRA.ext, hemi="S", season, GS, RCP=x)
       print(paste0("rcp", x, ", ", y," done"))
     }
