@@ -8,8 +8,8 @@ library(raster)
 
 #assumes focal value = 1
 buf_width <- 5000  #width of buffer in m
-BKGs <- list(0,0.25,0.25)  #background avleus
-BUFs <- list(0.5,0.75,0.75) #buffer values
+BKGs <- list(0.05,0.05,0.0)  #background valeus
+BUFs <- list(0.95,0.95,0.75) #buffer values
 LCs <- list("Agri","OAgri","Nature") #the maps to work through
 years <- c(2005, 2010)
 suffix <- "_PastureB_Disagg.asc"
