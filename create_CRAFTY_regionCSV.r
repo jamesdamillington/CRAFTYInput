@@ -267,9 +267,8 @@ if(!DC){
 #add nature
 join.xy <- join.xy %>%
   mutate(Nature = if_else(FR == "FR5", 1,       #virgin nature (FR4 not in initial state)      
-    if_else(FR == "FR8", 0.6,                     #pasture
-    if_else(FR == "FR7", 0, 0.3)                  #other = 0.0, non-pasture agri uses = 0.3
-    )))
+    if_else(FR == "FR8", 0.4,0)                     #pasture = 0.4, else 0
+    ))
 
 #decrease Nature Capital at edge (Nature Access as guide)
 join.xy <- join.xy %>%
