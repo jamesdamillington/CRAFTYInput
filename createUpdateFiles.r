@@ -6,16 +6,16 @@ rm(list=ls())
 library(tidyverse)
 library(raster)
 
-scenario <- "new2017_2020-02-10b"
+scenario <- "calibration_2020-04-18"
 
-update_yrs <- seq(2017, 2017, 1)
+update_yrs <- seq(2001, 2018, 1)
 
 #specify csv containing spatially uniform capital values
 #each row is a year, each column is Capital 
 uniform_caps <- read_csv("Data/UniformCapitals_2020-02-10b.csv")
 
 #need to use region file to identify required XY cells for this simulation
-region <- read_csv("Data/region2001_2020-02-10b.csv",
+region <- read_csv("Data/region2001_2020-04-18.csv",
   col_types = cols(`Land Price` = col_double(),
     `Growing Season` = col_double(),
     Other  = col_double(),
@@ -31,7 +31,7 @@ region <- read_csv("Data/region2001_2020-02-10b.csv",
 
 #specify capital map filename patterns  (assumes all map files end 'YEAR.asc')
 mois <- "MoistureCap_OctNovDecJanFebMar_S_"
-PortAccess <- "PortAccessCap90k_"
+PortAccess <- "PortAccessCap2020_"
 Oagri <- "singleLC_OtherAgri_"
 other <- "singleLC_Other_"
 Soy_LP <- "Soy_ProtectionMap_025_"

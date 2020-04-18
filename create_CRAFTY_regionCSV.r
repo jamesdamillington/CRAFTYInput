@@ -74,7 +74,7 @@ recode_if <- function(x, condition, ...){
 #4 = Other
 #5 = Pasture
 
-ofname <- "region2001_2020-02-15.csv"  #output filename
+ofname <- "region2001_2020-04-18.csv"  #output filename
   
   
 #unzip if needed
@@ -93,7 +93,7 @@ mois <- raster('Data/Moisture/MoistureCap_OctNovDecJanFebMar_S_2001.asc')   #moi
 GS <- raster('Data/Moisture/GSCap_JanFebMarAprMayJun_S_2001.asc')   #growing season (double cropper) capital from moistureMap.r 
 
 #infra <- raster('Data/PortAccessCapital/PortAccessCap2000.asc') #infrastrucutre capital from infrastructureMap.r
-infra <- raster('Data/PortAccessCapital/PortAccessCap90k_2000.asc') #infrastrucutre capital from infrastructureMap.r
+infra <- raster('Data/PortAccessCapital/PortAccessCap2020_2000.asc') #infrastrucutre capital from infrastructureMap.r
 #SoyProtect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
 #MaizeProtect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
 #OAgriProtect <- raster('Data/landProtection/All_ProtectionMap.asc') #land protection is intially identical for all services
@@ -120,7 +120,7 @@ DC <- F   #NO double cropping exists in 2001
 
 VH <- F
 #specify csv containing spatially uniform capital values (as used in createUpdateFiles.r)
-uniform_caps <- read_csv("Data/UniformCapitals_2020-02-15.csv")
+uniform_caps <- read_csv("Data/UniformCapitals_2020-02-10b.csv")
 unis <- uniform_caps %>% 
   filter(Year == 2001)   #select the uniform capital values for start year (edit if starting from a different year)
 
