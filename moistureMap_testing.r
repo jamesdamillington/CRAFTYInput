@@ -10,13 +10,14 @@ library(tidyverse)
 #set scenario parms
 initial_yr <- 2018
 final_yr <- 2035
-perc_chg <- 10   #this is the % difference over the entire period
+perc_chg <- -10   #this is the % difference over the entire period
 
 count_yrs <- final_yr - initial_yr
 final_diffc <- 1 + (perc_chg / 100)  #convert to final proportion diffc (over entire period)
 
 #read update file
 input_scenario <- "Data/Moisture/MoistureCap_OctNovDecJanFebMar_S_"
+#input_scenario <- "Data/Moisture/GSCap_JanFebMarAprMayJun_S_"
 #input_scenario <- "Data/Moisture/test_"
 initial_map <- raster(paste0(input_scenario,initial_yr,".asc"))
 
@@ -40,9 +41,9 @@ for(yr in seq(from=initial_yr+1,to=final_yr-1,by=1)){
   #m <- cellStats(initial_map, 'mean', na.rm=T)
   #print(m)
   
-  writeRaster(initial_map,paste0(input_scenario,yr,"_test",perc_chg,".asc"))  
+  writeRaster(initial_map,paste0(input_scenario,"testing",perc_chg,"_",yr,".asc"))  
   
 }
 
-writeRaster(final_map,paste0(input_scenario,final_yr,"_test",perc_chg,".asc"))  
+writeRaster(final_map,paste0(input_scenario,"testing",perc_chg,"_",final_yr,".asc"))  
 #plot(final_map,main=final_yr)
